@@ -314,7 +314,7 @@
              color: #9ca3af; /* gray-400 */
         }
 
-        /* Simple Notification styling (Placeholder) */
+        /* Simple Notification styling */
         #notification-area {
             position: fixed;
             top: 1rem;
@@ -341,6 +341,7 @@
         }
         .notification.success { background-color: #10b981; /* emerald-500 */ }
         .notification.error { background-color: #ef4444; /* red-500 */ }
+        .notification.info { background-color: #3b82f6; /* blue-500 */ }
 
 
     </style>
@@ -404,21 +405,12 @@
                  const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
                  const darkIcon = document.getElementById('theme-toggle-dark-icon');
                  const lightIcon = document.getElementById('theme-toggle-light-icon');
-                 if (theme === 'dark') {
-                    darkIcon?.classList.remove('hidden');
-                 } else {
-                    lightIcon?.classList.remove('hidden');
-                 }
-                 // Add listener to update icons when theme changes via the button
+                 if (theme === 'dark') { darkIcon?.classList.remove('hidden'); }
+                 else { lightIcon?.classList.remove('hidden'); }
                  document.getElementById('theme-toggle')?.addEventListener('click', () => {
                      const isDark = document.documentElement.classList.contains('dark');
-                     if (!isDark) {
-                         darkIcon?.classList.remove('hidden');
-                         lightIcon?.classList.add('hidden');
-                     } else {
-                         darkIcon?.classList.add('hidden');
-                         lightIcon?.classList.remove('hidden');
-                     }
+                     if (!isDark) { darkIcon?.classList.remove('hidden'); lightIcon?.classList.add('hidden'); }
+                     else { darkIcon?.classList.add('hidden'); lightIcon?.classList.remove('hidden'); }
                  });
              </script>
 
@@ -517,13 +509,25 @@
 
             <div class="section hidden" id="audit-section">
                  <h1 class="text-2xl font-bold section-title">Audit Log</h1>
-                 <div class="card p-6">
-                     <p>Audit log section content goes here. A table listing recent activities.</p>
-                      <div class="mt-4 border border-gray-200 dark:border-gray-700 rounded p-4">
-                         <p class="text-gray-500 dark:text-gray-400">Timestamp | User | Action | Details</p>
-                         <p class="mt-2">Apr 23, 2025 02:15 AM | System | Initialized Database</p>
-                         </div>
-                 </div>
+                 <div class="card">
+                     <div class="table-container overflow-x-auto">
+                         <table id="audit-log-table" class="min-w-full">
+                             <thead>
+                                 <tr>
+                                     <th class="py-3 px-4">Timestamp</th>
+                                     <th class="py-3 px-4">Action</th>
+                                     <th class="py-3 px-4">Details</th>
+                                     </tr>
+                             </thead>
+                             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                 <tr class="table-state-message" id="audit-log-loading">
+                                     <td colspan="3">Loading audit log...</td> </tr>
+                                 <tr class="table-state-message hidden" id="audit-log-empty">
+                                      <td colspan="3">No audit log entries found.</td> </tr>
+                                 </tbody>
+                         </table>
+                     </div>
+                     </div>
             </div>
 
             <div class="section hidden" id="settings-section">
@@ -557,13 +561,16 @@
                  </div>
             </div>
 
-        </div> </div> <div id="item-modal" class="modal-backdrop hidden"> <div class="modal-content relative dark:bg-slate-800">
+        </div> </div> <div id="item-modal" class="modal-backdrop hidden">
+        <div class="modal-content relative dark:bg-slate-800">
             <button id="close-modal" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
-            <h2 id="modal-title" class="text-xl font-semibold mb-4">Add New Inventory Item</h2> <form id="item-form" novalidate data-mode="add"> <input type="hidden" id="item-edit-id" name="editId">
+            <h2 id="modal-title" class="text-xl font-semibold mb-4">Add New Inventory Item</h2>
+            <form id="item-form" novalidate data-mode="add">
+                <input type="hidden" id="item-edit-id" name="editId">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label for="item-sku" class="form-label">SKU / Item Code</label>
@@ -582,7 +589,8 @@
                  </div>
                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                      <div>
-                        <label for="item-quantity" class="form-label">Quantity</label> <input type="number" id="item-quantity" name="quantity" class="form-input" value="0" min="0" required>
+                        <label for="item-quantity" class="form-label">Quantity</label>
+                        <input type="number" id="item-quantity" name="quantity" class="form-input" value="0" min="0" required>
                          <p class="text-red-500 text-xs mt-1 hidden" id="quantity-error">Quantity must be 0 or more.</p>
                      </div>
                      <div>
@@ -596,7 +604,9 @@
                     <textarea id="item-notes" name="notes" rows="3" class="form-input"></textarea>
                  </div>
                  <div class="flex justify-end space-x-3 mt-6">
-                     <button type="button" class="tw-button tw-button-secondary" id="cancel-item-modal">Cancel</button> <button type="submit" id="modal-submit-button" class="tw-button tw-button-primary">Add Item</button> </div>
+                     <button type="button" class="tw-button tw-button-secondary" id="cancel-item-modal">Cancel</button>
+                     <button type="submit" id="modal-submit-button" class="tw-button tw-button-primary">Add Item</button>
+                 </div>
             </form>
         </div>
     </div>
@@ -610,42 +620,18 @@
         if ('serviceWorker' in navigator) {
           window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js')
-              .then(registration => {
-                console.log('Service Worker registered successfully with scope:', registration.scope);
-                registration.addEventListener('updatefound', () => {
-                  const installingWorker = registration.installing;
-                  console.log('A new service worker is installing:', installingWorker);
-                  installingWorker.addEventListener('statechange', () => {
-                    if (installingWorker.state === 'installed') {
-                      if (navigator.serviceWorker.controller) {
-                        console.log('New content is available; please refresh.');
-                        // showNotification('New version available. Refresh to update.', 'info'); // Example
-                      } else {
-                        console.log('Content is cached for offline use.');
-                        // showNotification('App is ready for offline use.', 'success'); // Example
-                      }
-                    }
-                  });
-                });
-              })
-              .catch(error => {
-                console.error('Service Worker registration failed:', error);
-              });
+              .then(registration => { console.log('SW registered:', registration.scope); /* ... update checks ... */ })
+              .catch(error => { console.error('SW registration failed:', error); });
           });
-          navigator.serviceWorker.addEventListener('controllerchange', () => {
-            console.log('Controller changed.');
-            // Optionally reload or notify user
-            // window.location.reload();
-          });
-        } else {
-          console.log('Service Workers are not supported.');
-        }
+          navigator.serviceWorker.addEventListener('controllerchange', () => { console.log('Controller changed.'); });
+        } else { console.log('Service Workers not supported.'); }
 
         // --- IndexedDB Setup ---
         const DB_NAME = 'ChainSyncLiteDB';
-        const DB_VERSION = 1; // Keep version 1 unless schema changes
-        const STORE_NAME = 'inventory';
-        let db; // Variable to hold the database instance
+        const DB_VERSION = 2; // <<-- INCREMENT DB VERSION FOR SCHEMA CHANGE
+        const INVENTORY_STORE_NAME = 'inventory';
+        const AUDIT_LOG_STORE_NAME = 'audit_logs'; // <<-- New store name
+        let db;
 
         function initDB() {
           return new Promise((resolve, reject) => {
@@ -660,121 +646,195 @@
             request.onsuccess = (event) => {
               db = event.target.result;
               console.log('[DB] Database opened successfully.');
+              // Add basic error handler to the db connection itself
+              db.onerror = (event) => {
+                 console.error("[DB] Database error:", event.target.error);
+                 showNotification("Database error occurred.", "error");
+              };
               resolve(db);
             };
             request.onupgradeneeded = (event) => {
               console.log('[DB] Upgrade needed or database creation.');
               const tempDb = event.target.result;
-              if (!tempDb.objectStoreNames.contains(STORE_NAME)) {
-                console.log(`[DB] Creating object store: ${STORE_NAME}`);
-                const objectStore = tempDb.createObjectStore(STORE_NAME, { keyPath: 'id' });
-                objectStore.createIndex('name', 'name', { unique: false });
-                objectStore.createIndex('category', 'category', { unique: false });
-                objectStore.createIndex('lastUpdated', 'lastUpdated', { unique: false }); // Index for sorting later?
-                console.log('[DB] Object store and indexes created.');
+              const oldVersion = event.oldVersion; // Useful for incremental upgrades
+              console.log(`[DB] Upgrading from version ${oldVersion} to ${DB_VERSION}`);
+
+              // Create Inventory Store (if not exists - check needed if upgrading from v0)
+              if (!tempDb.objectStoreNames.contains(INVENTORY_STORE_NAME)) {
+                console.log(`[DB] Creating object store: ${INVENTORY_STORE_NAME}`);
+                const inventoryStore = tempDb.createObjectStore(INVENTORY_STORE_NAME, { keyPath: 'id' });
+                inventoryStore.createIndex('name', 'name', { unique: false });
+                inventoryStore.createIndex('category', 'category', { unique: false });
+                inventoryStore.createIndex('lastUpdated', 'lastUpdated', { unique: false });
+                console.log('[DB] Inventory store and indexes created.');
               }
+
+              // Create Audit Log Store (only if upgrading to version 2 or higher)
+              if (oldVersion < 2 && !tempDb.objectStoreNames.contains(AUDIT_LOG_STORE_NAME)) {
+                  console.log(`[DB] Creating object store: ${AUDIT_LOG_STORE_NAME}`);
+                  // Use autoIncrementing key for logs
+                  const auditLogStore = tempDb.createObjectStore(AUDIT_LOG_STORE_NAME, { keyPath: 'logId', autoIncrement: true });
+                  // Index the timestamp for easy sorting (most recent first)
+                  auditLogStore.createIndex('timestamp', 'timestamp', { unique: false });
+                  auditLogStore.createIndex('action', 'action', { unique: false }); // Index action type
+                  console.log('[DB] Audit log store and indexes created.');
+              }
+
+              // Handle future upgrades here based on oldVersion and DB_VERSION
+              // if (oldVersion < 3) { /* create/modify stores for v3 */ }
+
             };
           });
         }
 
         // --- IndexedDB CRUD Operations ---
 
-        /** Adds an item */
+        /** Adds an inventory item */
         function addItemToDB(item) {
           return new Promise((resolve, reject) => {
             initDB().then(dbInstance => {
-              const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
-              const store = transaction.objectStore(STORE_NAME);
+              const transaction = dbInstance.transaction([INVENTORY_STORE_NAME], 'readwrite');
+              const store = transaction.objectStore(INVENTORY_STORE_NAME);
               const request = store.add(item);
               request.onsuccess = () => resolve();
               request.onerror = (event) => {
                 console.error('[DB] Error adding item:', event.target.error);
-                if (event.target.error.name === 'ConstraintError') {
-                    reject(`Error: Item with SKU '${item.id}' already exists.`);
-                } else { reject('Error adding item to database.'); }
+                if (event.target.error.name === 'ConstraintError') { reject(`Error: Item with SKU '${item.id}' already exists.`); }
+                else { reject('Error adding item to database.'); }
               };
             }).catch(reject);
           });
         }
 
-        /** Retrieves all items */
+        /** Retrieves all inventory items */
         function getAllItemsFromDB() {
           return new Promise((resolve, reject) => {
             initDB().then(dbInstance => {
-              const transaction = dbInstance.transaction([STORE_NAME], 'readonly');
-              const store = transaction.objectStore(STORE_NAME);
+              const transaction = dbInstance.transaction([INVENTORY_STORE_NAME], 'readonly');
+              const store = transaction.objectStore(INVENTORY_STORE_NAME);
               const request = store.getAll();
               request.onsuccess = (event) => resolve(event.target.result || []);
-              request.onerror = (event) => {
-                console.error('[DB] Error getting all items:', event.target.error);
-                reject('Error retrieving items.');
-              };
+              request.onerror = (event) => { console.error('[DB] Error getting all items:', event.target.error); reject('Error retrieving items.'); };
             }).catch(reject);
           });
         }
 
-        /** Retrieves a single item by ID (SKU) */
+        /** Retrieves a single inventory item by ID (SKU) */
         function getItemFromDB(itemId) {
           return new Promise((resolve, reject) => {
             initDB().then(dbInstance => {
-              const transaction = dbInstance.transaction([STORE_NAME], 'readonly');
-              const store = transaction.objectStore(STORE_NAME);
-              const request = store.get(itemId); // Use get() with the key
-
+              const transaction = dbInstance.transaction([INVENTORY_STORE_NAME], 'readonly');
+              const store = transaction.objectStore(INVENTORY_STORE_NAME);
+              const request = store.get(itemId);
               request.onsuccess = (event) => {
-                if (event.target.result) {
-                  console.log('[DB] Retrieved item:', itemId);
-                  resolve(event.target.result);
-                } else {
-                  console.warn('[DB] Item not found:', itemId);
-                  reject(`Item with SKU '${itemId}' not found.`);
-                }
+                if (event.target.result) { resolve(event.target.result); }
+                else { reject(`Item with SKU '${itemId}' not found.`); }
               };
-              request.onerror = (event) => {
-                console.error('[DB] Error getting item:', itemId, event.target.error);
-                reject('Error retrieving item.');
-              };
+              request.onerror = (event) => { console.error('[DB] Error getting item:', itemId, event.target.error); reject('Error retrieving item.'); };
             }).catch(reject);
           });
         }
 
-        /** Updates an existing item */
+        /** Updates an existing inventory item */
         function updateItemInDB(item) {
           return new Promise((resolve, reject) => {
             initDB().then(dbInstance => {
-              const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
-              const store = transaction.objectStore(STORE_NAME);
-              // Use put() which adds or updates
+              const transaction = dbInstance.transaction([INVENTORY_STORE_NAME], 'readwrite');
+              const store = transaction.objectStore(INVENTORY_STORE_NAME);
               const request = store.put(item);
-
-              request.onsuccess = () => {
-                 console.log('[DB] Item updated successfully:', item.id);
-                 resolve();
-              };
-              request.onerror = (event) => {
-                console.error('[DB] Error updating item:', item.id, event.target.error);
-                reject('Error updating item in database.');
-              };
+              request.onsuccess = () => resolve();
+              request.onerror = (event) => { console.error('[DB] Error updating item:', item.id, event.target.error); reject('Error updating item.'); };
             }).catch(reject);
           });
         }
 
-
-        /** Deletes an item by ID (SKU) */
+        /** Deletes an inventory item by ID (SKU) */
         function deleteItemFromDB(itemId) {
           return new Promise((resolve, reject) => {
             initDB().then(dbInstance => {
-              const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
-              const store = transaction.objectStore(STORE_NAME);
-              const request = store.delete(itemId); // Use delete() with the key
+              const transaction = dbInstance.transaction([INVENTORY_STORE_NAME], 'readwrite');
+              const store = transaction.objectStore(INVENTORY_STORE_NAME);
+              const request = store.delete(itemId);
+              request.onsuccess = () => resolve();
+              request.onerror = (event) => { console.error('[DB] Error deleting item:', itemId, event.target.error); reject('Error deleting item.'); };
+            }).catch(reject);
+          });
+        }
+
+        // --- Audit Log DB Operations ---
+
+        /**
+         * Adds an entry to the audit log.
+         * @param {string} action - The action performed (e.g., 'ADD_ITEM', 'DELETE_ITEM').
+         * @param {string} details - Description of the action (e.g., 'SKU: 123, Name: Widget').
+         * @returns {Promise<void>}
+         */
+        function addAuditLogEntry(action, details) {
+          return new Promise((resolve, reject) => {
+            initDB().then(dbInstance => {
+              const transaction = dbInstance.transaction([AUDIT_LOG_STORE_NAME], 'readwrite');
+              const store = transaction.objectStore(AUDIT_LOG_STORE_NAME);
+              const logEntry = {
+                timestamp: new Date().toISOString(),
+                action: action,
+                details: details
+                // user: 'System' // Add current user later if implementing accounts
+              };
+              const request = store.add(logEntry);
 
               request.onsuccess = () => {
-                console.log('[DB] Item deleted successfully:', itemId);
+                console.log('[DB] Audit log entry added:', logEntry);
                 resolve();
               };
               request.onerror = (event) => {
-                console.error('[DB] Error deleting item:', itemId, event.target.error);
-                reject('Error deleting item from database.');
+                console.error('[DB] Error adding audit log entry:', event.target.error);
+                // Don't reject the main operation for a log failure, just log it
+                resolve(); // Resolve anyway so the main operation continues
+              };
+            }).catch(error => {
+                 console.error('[DB] Error accessing DB for audit log:', error);
+                 resolve(); // Resolve anyway
+            });
+          });
+        }
+
+        /**
+         * Retrieves all audit log entries, sorted newest first.
+         * @returns {Promise<Array<object>>} A promise that resolves with an array of log entries.
+         */
+        function getAllAuditLogsFromDB() {
+          return new Promise((resolve, reject) => {
+            initDB().then(dbInstance => {
+              const transaction = dbInstance.transaction([AUDIT_LOG_STORE_NAME], 'readonly');
+              const store = transaction.objectStore(AUDIT_LOG_STORE_NAME);
+              // Use the 'timestamp' index and open cursor in 'prev' direction for newest first
+              const index = store.index('timestamp');
+              const request = index.getAll(null, 100); // Get all, or limit (e.g., 100 most recent)
+
+              // Alternatively, use a cursor for potentially better performance with large logs:
+              /*
+              const logs = [];
+              const request = index.openCursor(null, 'prev'); // null range, newest first
+              request.onsuccess = (event) => {
+                  const cursor = event.target.result;
+                  if (cursor) {
+                      logs.push(cursor.value);
+                      cursor.continue();
+                  } else {
+                      console.log('[DB] Retrieved all audit logs via cursor.');
+                      resolve(logs);
+                  }
+              };
+              */
+
+              request.onsuccess = (event) => {
+                  console.log('[DB] Retrieved all audit logs via getAll.');
+                  resolve(event.target.result || []);
+              };
+
+              request.onerror = (event) => {
+                console.error('[DB] Error getting all audit logs:', event.target.error);
+                reject('Error retrieving audit logs.');
               };
             }).catch(reject);
           });
@@ -783,19 +843,26 @@
 
         // --- Application Logic ---
         document.addEventListener('DOMContentLoaded', async () => {
+            // Get references to UI elements
             const navLinks = document.querySelectorAll('.nav-link');
             const sections = document.querySelectorAll('.main-content .section');
             const themeToggleButton = document.getElementById('theme-toggle');
             const addItemButton = document.getElementById('add-item-button');
-            const modal = document.getElementById('item-modal'); // Updated ID
+            const modal = document.getElementById('item-modal');
             const closeModalButton = document.getElementById('close-modal');
-            const cancelItemModalButton = document.getElementById('cancel-item-modal'); // Updated ID
-            const itemForm = document.getElementById('item-form'); // Updated ID
+            const cancelItemModalButton = document.getElementById('cancel-item-modal');
+            const itemForm = document.getElementById('item-form');
 
-            // --- Initial DB Setup ---
+            // Initialize DB
             try {
                 await initDB();
                 console.log("Database initialized.");
+                // Add an initial log entry if this is the first time DB version 2 is opened
+                // This requires a way to track if the initial log was added, maybe localStorage
+                if (!localStorage.getItem('dbV2Initialized')) {
+                    await addAuditLogEntry('SYSTEM_INIT', `Database initialized/upgraded to v${DB_VERSION}.`);
+                    localStorage.setItem('dbV2Initialized', 'true');
+                }
             } catch (error) {
                 console.error("Failed to initialize database:", error);
                 document.getElementById('inventory-loading').querySelector('td').textContent = 'Error loading database.';
@@ -803,19 +870,19 @@
                 return;
             }
 
-            // --- UI Element Setup ---
+            // Setup UI components
             setupNavigation(navLinks, sections);
             setupThemeToggle(themeToggleButton);
             setupModal(addItemButton, modal, closeModalButton, cancelItemModalButton, itemForm);
             setupInventorySearch();
 
-            // --- Initial Section Loading ---
+            // Load the initially active section
             loadActiveSection();
 
         }); // End DOMContentLoaded
 
-        // --- UI Helper Functions ---
-
+        // --- UI Helper Functions --- (setupNavigation, showSection, loadActiveSection, setupThemeToggle, setupModal, clearFormErrors, displayFormError)
+        // ... (Keep existing UI helper functions as they are) ...
         function setupNavigation(navLinks, sections) {
              navLinks.forEach(link => {
                 if (!link) return;
@@ -837,9 +904,10 @@
                     section.classList.add('active');
                     section.classList.remove('hidden');
                     sectionFound = true;
+                    // --- Trigger data loading for the activated section ---
                     if (targetId === 'inventory') { loadInventoryData(); }
                     else if (targetId === 'reports') { loadReportData(); }
-                    else if (targetId === 'audit') { loadAuditLog(); }
+                    else if (targetId === 'audit') { loadAuditLog(); } // <<-- Load audit log data
                 } else {
                     section.classList.remove('active');
                     section.classList.add('hidden');
@@ -872,17 +940,8 @@
             const applyTheme = (theme) => {
                 const darkIcon = document.getElementById('theme-toggle-dark-icon');
                 const lightIcon = document.getElementById('theme-toggle-light-icon');
-                if (theme === 'dark') {
-                    document.documentElement.classList.add('dark');
-                    document.body.classList.add('dark');
-                    darkIcon?.classList.remove('hidden');
-                    lightIcon?.classList.add('hidden');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                    document.body.classList.remove('dark');
-                    darkIcon?.classList.add('hidden');
-                    lightIcon?.classList.remove('hidden');
-                }
+                if (theme === 'dark') { document.documentElement.classList.add('dark'); document.body.classList.add('dark'); darkIcon?.classList.remove('hidden'); lightIcon?.classList.add('hidden'); }
+                else { document.documentElement.classList.remove('dark'); document.body.classList.remove('dark'); darkIcon?.classList.add('hidden'); lightIcon?.classList.remove('hidden'); }
                 localStorage.setItem('theme', theme);
             };
             const savedTheme = localStorage.getItem('theme');
@@ -897,43 +956,28 @@
             } else { console.warn("Theme toggle button not found"); }
         }
 
-        function setupModal(addItemButton, modal, closeModalButton, cancelItemModalButton, itemForm) {
+       function setupModal(addItemButton, modal, closeModalButton, cancelItemModalButton, itemForm) {
              const modalTitle = document.getElementById('modal-title');
              const submitButton = document.getElementById('modal-submit-button');
              const skuInput = document.getElementById('item-sku');
 
              const openModalForAdd = () => {
-                 itemForm.dataset.mode = 'add'; // Set mode attribute
-                 itemForm.reset();
-                 clearFormErrors(itemForm);
-                 modalTitle.textContent = 'Add New Inventory Item';
-                 submitButton.textContent = 'Add Item';
-                 skuInput.readOnly = false; // Ensure SKU is editable for adding
-                 skuInput.classList.remove('form-input:read-only', 'dark:form-input:read-only'); // Remove read-only styles
-                 modal.classList.remove('hidden');
-                 modal.classList.add('flex');
-                 skuInput.focus(); // Focus SKU for new item
+                 itemForm.dataset.mode = 'add'; itemForm.reset(); clearFormErrors(itemForm);
+                 modalTitle.textContent = 'Add New Inventory Item'; submitButton.textContent = 'Add Item';
+                 skuInput.readOnly = false; skuInput.classList.remove('form-input:read-only', 'dark:form-input:read-only');
+                 modal.classList.remove('hidden'); modal.classList.add('flex'); skuInput.focus();
              };
-
              const closeModal = () => {
-                 modal.classList.add('hidden');
-                 modal.classList.remove('flex');
-                 itemForm.reset();
-                 clearFormErrors(itemForm);
-                 // Reset mode and button text just in case
-                 itemForm.dataset.mode = 'add';
-                 modalTitle.textContent = 'Add New Inventory Item';
-                 submitButton.textContent = 'Add Item';
-                 skuInput.readOnly = false;
-                 skuInput.classList.remove('form-input:read-only', 'dark:form-input:read-only');
+                 modal.classList.add('hidden'); modal.classList.remove('flex'); itemForm.reset(); clearFormErrors(itemForm);
+                 itemForm.dataset.mode = 'add'; modalTitle.textContent = 'Add New Inventory Item'; submitButton.textContent = 'Add Item';
+                 skuInput.readOnly = false; skuInput.classList.remove('form-input:read-only', 'dark:form-input:read-only');
              };
 
              if (addItemButton && modal && closeModalButton && cancelItemModalButton && itemForm && modalTitle && submitButton && skuInput) {
                 addItemButton.addEventListener('click', openModalForAdd);
-                closeModalButton.addEventListener('click', closeModal);
-                cancelItemModalButton.addEventListener('click', closeModal);
+                closeModalButton.addEventListener('click', closeModal); cancelItemModalButton.addEventListener('click', closeModal);
                 modal.addEventListener('click', (event) => { if (event.target === modal) { closeModal(); } });
-                itemForm.addEventListener('submit', handleItemFormSubmit); // Use one handler
+                itemForm.addEventListener('submit', handleItemFormSubmit);
             } else { console.warn("Modal elements not all found."); }
         }
 
@@ -942,358 +986,256 @@
             form.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
             form.querySelectorAll('input[aria-invalid="true"]').forEach(el => el.removeAttribute('aria-invalid'));
         }
-
         function displayFormError(fieldId, message) {
-            const errorEl = document.getElementById(`${fieldId}-error`);
-            const inputEl = document.getElementById(`item-${fieldId}`);
-            if (errorEl) {
-                errorEl.textContent = message;
-                errorEl.classList.remove('hidden');
-            }
-             if (inputEl) {
-                 inputEl.classList.add('border-red-500');
-                 inputEl.setAttribute('aria-invalid', 'true');
-             }
+            const errorEl = document.getElementById(`${fieldId}-error`); const inputEl = document.getElementById(`item-${fieldId}`);
+            if (errorEl) { errorEl.textContent = message; errorEl.classList.remove('hidden'); }
+            if (inputEl) { inputEl.classList.add('border-red-500'); inputEl.setAttribute('aria-invalid', 'true'); }
         }
+
 
         /** Handles both Add and Edit form submissions */
         async function handleItemFormSubmit(event) {
             event.preventDefault();
             const form = event.target;
-            const mode = form.dataset.mode || 'add'; // Get mode ('add' or 'edit')
+            const mode = form.dataset.mode || 'add';
             const submitButton = document.getElementById('modal-submit-button');
 
             clearFormErrors(form);
-            submitButton.disabled = true; // Disable button during processing
+            submitButton.disabled = true;
             submitButton.textContent = mode === 'add' ? 'Adding...' : 'Saving...';
 
             const formData = new FormData(form);
             const itemData = {};
             let isValid = true;
 
-            // --- Validation ---
-            const sku = formData.get('id')?.trim();
-            const name = formData.get('name')?.trim();
-            const quantity = formData.get('quantity');
-            const cost = formData.get('cost');
-
+            // Validation
+            const sku = formData.get('id')?.trim(); const name = formData.get('name')?.trim();
+            const quantity = formData.get('quantity'); const cost = formData.get('cost');
             if (!sku) { displayFormError('sku', 'SKU is required.'); isValid = false; }
             if (!name) { displayFormError('name', 'Name is required.'); isValid = false; }
             if (quantity === null || quantity === '' || parseInt(quantity) < 0) { displayFormError('quantity', 'Quantity must be 0 or more.'); isValid = false; }
             if (cost !== null && cost !== '' && parseFloat(cost) < 0) { displayFormError('cost', 'Cost cannot be negative.'); isValid = false; }
+            if (!isValid) { submitButton.disabled = false; submitButton.textContent = mode === 'add' ? 'Add Item' : 'Save Changes'; return; }
 
-            if (!isValid) {
-                submitButton.disabled = false; // Re-enable button
-                submitButton.textContent = mode === 'add' ? 'Add Item' : 'Save Changes';
-                return;
-            }
+            // Prepare Data
+            itemData.id = sku; itemData.name = name; itemData.category = formData.get('category')?.trim() || '';
+            itemData.quantity = parseInt(quantity); itemData.cost = (cost !== null && cost !== '') ? parseFloat(cost) : null;
+            itemData.notes = formData.get('notes')?.trim() || ''; itemData.lastUpdated = new Date().toISOString();
 
-            // --- Prepare Data ---
-            itemData.id = sku;
-            itemData.name = name;
-            itemData.category = formData.get('category')?.trim() || '';
-            itemData.quantity = parseInt(quantity);
-            itemData.cost = (cost !== null && cost !== '') ? parseFloat(cost) : null;
-            itemData.notes = formData.get('notes')?.trim() || '';
-            itemData.lastUpdated = new Date().toISOString();
-
-            // --- Perform DB Operation ---
+            // Perform DB Operation
             try {
+                let logAction = '';
+                let logDetails = `SKU: ${itemData.id}, Name: ${itemData.name}`;
+
                 if (mode === 'add') {
+                    logAction = 'ADD_ITEM';
                     console.log('Attempting to add item:', itemData);
                     await addItemToDB(itemData);
                     showNotification(`Item '${itemData.name}' added successfully.`, 'success');
                 } else { // mode === 'edit'
-                    const editId = formData.get('editId'); // Get the original ID
-                    if (!editId) throw new Error("Cannot update item: Original ID missing.");
-                    // Ensure the ID hasn't been changed (it shouldn't be editable, but double-check)
-                    if (editId !== itemData.id) throw new Error("Cannot change item SKU during edit.");
+                    logAction = 'EDIT_ITEM';
+                    const editId = formData.get('editId');
+                    if (!editId || editId !== itemData.id) throw new Error("Cannot update item: ID mismatch or missing.");
                     console.log('Attempting to update item:', itemData);
+                    // Maybe add more detail to log for edits? (e.g., changed fields)
+                    // For simplicity now, just log the edit action.
                     await updateItemInDB(itemData);
-                     showNotification(`Item '${itemData.name}' updated successfully.`, 'success');
+                    showNotification(`Item '${itemData.name}' updated successfully.`, 'success');
                 }
 
-                // --- Success ---
-                document.getElementById('item-modal').classList.add('hidden'); // Close modal
+                // --- Add Audit Log Entry ---
+                await addAuditLogEntry(logAction, logDetails);
+
+                // Success: Close modal, reset form, refresh list
+                document.getElementById('item-modal').classList.add('hidden');
                 document.getElementById('item-modal').classList.remove('flex');
-                form.reset(); // Reset form for next time
-                await loadInventoryData(document.getElementById('inventory-search')?.value || ''); // Refresh list
+                form.reset();
+                await loadInventoryData(document.getElementById('inventory-search')?.value || '');
 
             } catch (error) {
                 console.error(`Failed to ${mode} item:`, error);
                 showNotification(`Error ${mode === 'add' ? 'adding' : 'saving'} item: ${error}`, 'error');
-                // Display specific error if possible (e.g., duplicate SKU)
-                 if (typeof error === 'string' && error.includes('already exists')) {
-                     displayFormError('sku', error);
-                 }
+                if (typeof error === 'string' && error.includes('already exists')) { displayFormError('sku', error); }
             } finally {
-                 // --- Always re-enable button and reset text ---
+                 // Always re-enable button and reset modal state
                  submitButton.disabled = false;
-                 // Reset button text based on original mode intended (in case user reopens modal)
-                 const modalTitle = document.getElementById('modal-title');
-                 const skuInput = document.getElementById('item-sku');
-                 modalTitle.textContent = 'Add New Inventory Item';
-                 submitButton.textContent = 'Add Item';
-                 form.dataset.mode = 'add'; // Reset mode
-                 skuInput.readOnly = false;
-                 skuInput.classList.remove('form-input:read-only', 'dark:form-input:read-only');
+                 const modalTitle = document.getElementById('modal-title'); const skuInput = document.getElementById('item-sku');
+                 modalTitle.textContent = 'Add New Inventory Item'; submitButton.textContent = 'Add Item';
+                 form.dataset.mode = 'add'; skuInput.readOnly = false; skuInput.classList.remove('form-input:read-only', 'dark:form-input:read-only');
             }
         }
 
 
-        // --- Data Loading & Display ---
-
+        // --- Data Loading & Display --- (loadInventoryData, renderInventoryRow, updateSummaryCards, updateInventoryFooter, setupInventorySearch)
+        // ... (Keep existing inventory data loading functions as they are) ...
         async function loadInventoryData(searchTerm = '') {
             console.log(`Loading inventory data (Search: "${searchTerm}")...`);
             const tableBody = document.querySelector('#inventory-table tbody');
             const loadingRow = document.getElementById('inventory-loading');
             const emptyRow = document.getElementById('inventory-empty');
             const footerInfo = document.getElementById('inventory-footer');
+            if (!tableBody || !loadingRow || !emptyRow || !footerInfo) { console.error("Inventory table elements not found!"); return; }
 
-            if (!tableBody || !loadingRow || !emptyRow || !footerInfo) {
-                console.error("Inventory table elements not found!"); return;
-            }
-
-            loadingRow.classList.remove('hidden');
-            emptyRow.classList.add('hidden');
+            loadingRow.classList.remove('hidden'); emptyRow.classList.add('hidden');
             tableBody.querySelectorAll('tr:not(#inventory-loading):not(#inventory-empty)').forEach(row => row.remove());
             footerInfo.classList.add('hidden');
 
             try {
                 let items = await getAllItemsFromDB();
-                console.log(`[DB] Retrieved ${items.length} items.`);
-
                  if (searchTerm) {
                      const lowerSearchTerm = searchTerm.toLowerCase();
-                     items = items.filter(item =>
-                         item.id.toLowerCase().includes(lowerSearchTerm) ||
-                         item.name.toLowerCase().includes(lowerSearchTerm) ||
-                         item.category.toLowerCase().includes(lowerSearchTerm)
-                     );
-                      console.log(`Filtered down to ${items.length} items matching "${searchTerm}".`);
+                     items = items.filter(item => item.id.toLowerCase().includes(lowerSearchTerm) || item.name.toLowerCase().includes(lowerSearchTerm) || item.category.toLowerCase().includes(lowerSearchTerm));
                  }
-
                 loadingRow.classList.add('hidden');
-
-                if (items.length === 0) {
-                    emptyRow.classList.remove('hidden');
-                    updateSummaryCards([]);
-                    updateInventoryFooter(0, 0, 0);
-                } else {
-                    emptyRow.classList.add('hidden');
-                    // Sort items maybe? By SKU or name? Example: Sort by SKU
-                    items.sort((a, b) => a.id.localeCompare(b.id));
-                    items.forEach(item => renderInventoryRow(item, tableBody));
-                    updateSummaryCards(items);
-                    updateInventoryFooter(1, items.length, items.length);
-                }
-                 footerInfo.classList.remove('hidden');
-
-            } catch (error) {
-                console.error("Error loading inventory data:", error);
-                loadingRow.querySelector('td').textContent = 'Error loading inventory.';
-                emptyRow.classList.add('hidden');
-                updateSummaryCards([]);
-                updateInventoryFooter(0, 0, 0);
+                if (items.length === 0) { emptyRow.classList.remove('hidden'); updateSummaryCards([]); updateInventoryFooter(0, 0, 0); }
+                else { emptyRow.classList.add('hidden'); items.sort((a, b) => a.id.localeCompare(b.id)); items.forEach(item => renderInventoryRow(item, tableBody)); updateSummaryCards(items); updateInventoryFooter(1, items.length, items.length); }
                 footerInfo.classList.remove('hidden');
-                showNotification('Error loading inventory data.', 'error');
+            } catch (error) {
+                console.error("Error loading inventory data:", error); loadingRow.querySelector('td').textContent = 'Error loading inventory.'; emptyRow.classList.add('hidden');
+                updateSummaryCards([]); updateInventoryFooter(0, 0, 0); footerInfo.classList.remove('hidden'); showNotification('Error loading inventory data.', 'error');
             }
         }
-
         function renderInventoryRow(item, tableBody) {
-             const row = tableBody.insertRow();
-             row.className = 'border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors duration-150';
-             row.dataset.itemId = item.id;
-
-             let statusClass = '';
-             let statusText = '';
-             const lowStockThreshold = 10;
-
+             const row = tableBody.insertRow(); row.className = 'border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors duration-150'; row.dataset.itemId = item.id;
+             let statusClass = ''; let statusText = ''; const lowStockThreshold = 10;
              if (item.quantity <= 0) { statusText = 'Out of Stock'; statusClass = 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100'; }
              else if (item.quantity <= lowStockThreshold) { statusText = 'Low Stock'; statusClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100'; }
              else { statusText = 'In Stock'; statusClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-700 dark:text-emerald-100'; }
-
              row.innerHTML = `
-                <td class="py-3 px-4 text-sm whitespace-nowrap">${item.id}</td>
-                <td class="py-3 px-4 font-medium whitespace-nowrap">${item.name}</td>
-                <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">${item.category || '-'}</td>
-                <td class="py-3 px-4 text-sm text-center">${item.quantity}</td>
-                <td class="py-3 px-4 text-sm">
-                    <span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">
-                        ${statusText}
-                    </span>
-                </td>
+                <td class="py-3 px-4 text-sm whitespace-nowrap">${item.id}</td> <td class="py-3 px-4 font-medium whitespace-nowrap">${item.name}</td>
+                <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">${item.category || '-'}</td> <td class="py-3 px-4 text-sm text-center">${item.quantity}</td>
+                <td class="py-3 px-4 text-sm"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${statusText}</span></td>
                 <td class="py-3 px-4 text-sm text-center whitespace-nowrap">
-                    <button class="edit-item-btn text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mr-2 p-1 rounded hover:bg-blue-100 dark:hover:bg-slate-700" title="Edit" data-id="${item.id}">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                    </button>
-                    <button class="delete-item-btn text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-100 dark:hover:bg-slate-700" title="Delete" data-id="${item.id}" data-name="${item.name}">
-                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                    </button>
-                </td>
-            `;
-
-             row.querySelector('.edit-item-btn')?.addEventListener('click', handleEditItem);
-             row.querySelector('.delete-item-btn')?.addEventListener('click', handleDeleteItem);
+                    <button class="edit-item-btn text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mr-2 p-1 rounded hover:bg-blue-100 dark:hover:bg-slate-700" title="Edit" data-id="${item.id}"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
+                    <button class="delete-item-btn text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-100 dark:hover:bg-slate-700" title="Delete" data-id="${item.id}" data-name="${item.name}"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                </td>`;
+             row.querySelector('.edit-item-btn')?.addEventListener('click', handleEditItem); row.querySelector('.delete-item-btn')?.addEventListener('click', handleDeleteItem);
         }
-
         function updateSummaryCards(items) {
-            const totalItemsEl = document.getElementById('summary-total-items');
-            const lowStockEl = document.getElementById('summary-low-stock');
-            const outOfStockEl = document.getElementById('summary-out-of-stock');
-            const totalValueEl = document.getElementById('summary-total-value');
+            const totalItemsEl = document.getElementById('summary-total-items'); const lowStockEl = document.getElementById('summary-low-stock');
+            const outOfStockEl = document.getElementById('summary-out-of-stock'); const totalValueEl = document.getElementById('summary-total-value');
             if (!totalItemsEl || !lowStockEl || !outOfStockEl || !totalValueEl) return;
-
-            const lowStockThreshold = 10;
-            let lowStockCount = 0;
-            let outOfStockCount = 0;
-            let totalValue = 0;
-
-            items.forEach(item => {
-                if (item.quantity <= 0) { outOfStockCount++; }
-                else if (item.quantity <= lowStockThreshold) { lowStockCount++; }
-                if (item.cost && item.quantity > 0) { totalValue += item.cost * item.quantity; }
-            });
-
-            totalItemsEl.textContent = items.length;
-            lowStockEl.textContent = lowStockCount;
-            outOfStockEl.textContent = outOfStockCount;
-            totalValueEl.textContent = `$${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`; // Format currency
+            const lowStockThreshold = 10; let lowStockCount = 0; let outOfStockCount = 0; let totalValue = 0;
+            items.forEach(item => { if (item.quantity <= 0) { outOfStockCount++; } else if (item.quantity <= lowStockThreshold) { lowStockCount++; } if (item.cost && item.quantity > 0) { totalValue += item.cost * item.quantity; } });
+            totalItemsEl.textContent = items.length; lowStockEl.textContent = lowStockCount; outOfStockEl.textContent = outOfStockCount;
+            totalValueEl.textContent = `$${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         }
-
         function updateInventoryFooter(start, end, total) {
-             const startEl = document.getElementById('item-count-start');
-             const endEl = document.getElementById('item-count-end');
-             const totalEl = document.getElementById('item-count-total');
-             if (startEl && endEl && totalEl) {
-                 startEl.textContent = total > 0 ? start : 0;
-                 endEl.textContent = end;
-                 totalEl.textContent = total;
-             }
+             const startEl = document.getElementById('item-count-start'); const endEl = document.getElementById('item-count-end'); const totalEl = document.getElementById('item-count-total');
+             if (startEl && endEl && totalEl) { startEl.textContent = total > 0 ? start : 0; endEl.textContent = end; totalEl.textContent = total; }
         }
-
         function setupInventorySearch() {
             const searchInput = document.getElementById('inventory-search');
-            if (searchInput) {
-                let debounceTimer;
-                searchInput.addEventListener('input', (e) => {
-                    clearTimeout(debounceTimer);
-                    const searchTerm = e.target.value;
-                    debounceTimer = setTimeout(() => { loadInventoryData(searchTerm); }, 300);
-                });
-            }
+            if (searchInput) { let debounceTimer; searchInput.addEventListener('input', (e) => { clearTimeout(debounceTimer); const searchTerm = e.target.value; debounceTimer = setTimeout(() => { loadInventoryData(searchTerm); }, 300); }); }
         }
+
 
         // --- Edit/Delete Handlers ---
         async function handleEditItem(event) {
-            const button = event.currentTarget;
-            const itemId = button.dataset.id;
-            console.log("Edit item clicked:", itemId);
-
+            const button = event.currentTarget; const itemId = button.dataset.id; console.log("Edit item clicked:", itemId);
             try {
                 const item = await getItemFromDB(itemId);
-
-                // Prepare modal for editing
-                const modal = document.getElementById('item-modal');
-                const form = document.getElementById('item-form');
-                const modalTitle = document.getElementById('modal-title');
-                const submitButton = document.getElementById('modal-submit-button');
-                const skuInput = document.getElementById('item-sku');
-                const editIdInput = document.getElementById('item-edit-id');
-
-                form.dataset.mode = 'edit'; // Set mode
-                form.reset(); // Clear previous stuff
-                clearFormErrors(form);
-
-                // Populate form
-                editIdInput.value = item.id; // Store original ID
-                skuInput.value = item.id;
-                document.getElementById('item-name').value = item.name;
-                document.getElementById('item-category').value = item.category || '';
-                document.getElementById('item-quantity').value = item.quantity;
-                document.getElementById('item-cost').value = item.cost !== null ? item.cost : '';
-                document.getElementById('item-notes').value = item.notes || '';
-
-                // Update modal appearance
-                modalTitle.textContent = 'Edit Inventory Item';
-                submitButton.textContent = 'Save Changes';
-                skuInput.readOnly = true; // Make SKU read-only during edit
-                skuInput.classList.add('form-input:read-only', 'dark:form-input:read-only');
-
-                // Show modal
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                document.getElementById('item-name').focus(); // Focus name field
-
-            } catch (error) {
-                 console.error(`Failed to load item ${itemId} for editing:`, error);
-                 showNotification(`Error loading item data: ${error}`, 'error');
-            }
+                const modal = document.getElementById('item-modal'); const form = document.getElementById('item-form');
+                const modalTitle = document.getElementById('modal-title'); const submitButton = document.getElementById('modal-submit-button');
+                const skuInput = document.getElementById('item-sku'); const editIdInput = document.getElementById('item-edit-id');
+                form.dataset.mode = 'edit'; form.reset(); clearFormErrors(form);
+                editIdInput.value = item.id; skuInput.value = item.id; document.getElementById('item-name').value = item.name;
+                document.getElementById('item-category').value = item.category || ''; document.getElementById('item-quantity').value = item.quantity;
+                document.getElementById('item-cost').value = item.cost !== null ? item.cost : ''; document.getElementById('item-notes').value = item.notes || '';
+                modalTitle.textContent = 'Edit Inventory Item'; submitButton.textContent = 'Save Changes';
+                skuInput.readOnly = true; skuInput.classList.add('form-input:read-only', 'dark:form-input:read-only');
+                modal.classList.remove('hidden'); modal.classList.add('flex'); document.getElementById('item-name').focus();
+            } catch (error) { console.error(`Failed to load item ${itemId} for editing:`, error); showNotification(`Error loading item data: ${error}`, 'error'); }
         }
 
         async function handleDeleteItem(event) {
-            const button = event.currentTarget;
-            const itemId = button.dataset.id;
-            const itemName = button.dataset.name || 'this item';
+            const button = event.currentTarget; const itemId = button.dataset.id; const itemName = button.dataset.name || 'this item';
             console.log("Delete item clicked:", itemId);
-
             if (confirm(`Are you sure you want to delete "${itemName}" (SKU: ${itemId})? This action cannot be undone.`)) {
-                console.log(`Proceeding with deletion of ${itemId}`);
-                button.disabled = true; // Disable button during delete
-
+                console.log(`Proceeding with deletion of ${itemId}`); button.disabled = true;
                 try {
                    await deleteItemFromDB(itemId);
                    console.log(`Item ${itemId} deleted from DB.`);
+                   // --- Add Audit Log Entry ---
+                   await addAuditLogEntry('DELETE_ITEM', `SKU: ${itemId}, Name: ${itemName}`);
                    showNotification(`Item '${itemName}' deleted successfully.`, 'success');
-
-                   // Remove row from table directly for immediate feedback (optional, loadInventoryData also handles it)
-                   // button.closest('tr')?.remove();
-
-                   // Reload data to update table and summary
-                   await loadInventoryData(document.getElementById('inventory-search')?.value || '');
-
+                   await loadInventoryData(document.getElementById('inventory-search')?.value || ''); // Refresh list
                 } catch (error) {
-                   console.error(`Failed to delete item ${itemId}:`, error);
-                   showNotification(`Error deleting item: ${error}`, 'error');
-                   button.disabled = false; // Re-enable button on error
+                   console.error(`Failed to delete item ${itemId}:`, error); showNotification(`Error deleting item: ${error}`, 'error'); button.disabled = false;
                 }
-                // No finally needed here as button is removed on success via reload
-            } else {
-                 console.log(`Deletion cancelled for ${itemId}`);
+            } else { console.log(`Deletion cancelled for ${itemId}`); }
+        }
+
+
+        // --- Notification System ---
+        function showNotification(message, type = 'info', duration = 3000) {
+            const notificationArea = document.getElementById('notification-area'); if (!notificationArea) return;
+            const notification = document.createElement('div'); notification.className = `notification ${type}`; notification.textContent = message;
+            notificationArea.appendChild(notification);
+            requestAnimationFrame(() => { notification.classList.add('show'); });
+            setTimeout(() => { notification.classList.remove('show'); notification.addEventListener('transitionend', () => { notification.remove(); }, { once: true }); }, duration);
+        }
+
+
+        // --- Audit Log Functions ---
+        async function loadAuditLog() {
+            console.log("Loading audit log data...");
+            const tableBody = document.querySelector('#audit-log-table tbody');
+            const loadingRow = document.getElementById('audit-log-loading');
+            const emptyRow = document.getElementById('audit-log-empty');
+            // const footerInfo = document.getElementById('audit-log-footer'); // If using footer
+
+            if (!tableBody || !loadingRow || !emptyRow) {
+                console.error("Audit log table elements not found!");
+                return;
+            }
+
+            // Show loading, hide empty
+            loadingRow.classList.remove('hidden');
+            emptyRow.classList.add('hidden');
+            tableBody.querySelectorAll('tr:not(#audit-log-loading):not(#audit-log-empty)').forEach(row => row.remove());
+            // footerInfo?.classList.add('hidden');
+
+            try {
+                const logs = await getAllAuditLogsFromDB(); // Fetches newest first
+                console.log(`[DB] Retrieved ${logs.length} audit logs.`);
+
+                loadingRow.classList.add('hidden');
+
+                if (logs.length === 0) {
+                    emptyRow.classList.remove('hidden');
+                } else {
+                    emptyRow.classList.add('hidden');
+                    logs.forEach(log => renderAuditLogRow(log, tableBody));
+                    // Update footer if pagination is added later
+                    // footerInfo?.classList.remove('hidden');
+                }
+
+            } catch (error) {
+                 console.error("Error loading audit log data:", error);
+                 loadingRow.querySelector('td').textContent = 'Error loading audit log.';
+                 emptyRow.classList.add('hidden');
+                 showNotification('Error loading audit log.', 'error');
             }
         }
 
+        function renderAuditLogRow(log, tableBody) {
+            const row = tableBody.insertRow(); // Add to end (which is visually the top because data is reversed)
+            row.className = 'border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors duration-150';
 
-        // --- Notification System (Simple Example) ---
-        function showNotification(message, type = 'info', duration = 3000) {
-            const notificationArea = document.getElementById('notification-area');
-            if (!notificationArea) return;
+            // Format timestamp for better readability
+            const timestamp = new Date(log.timestamp);
+            const formattedTimestamp = timestamp.toLocaleString(); // Use locale-specific format
 
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`; // 'success', 'error', 'info'
-            notification.textContent = message;
-
-            notificationArea.appendChild(notification);
-
-            // Trigger transition
-            requestAnimationFrame(() => {
-                notification.classList.add('show');
-            });
-
-            // Remove after duration
-            setTimeout(() => {
-                notification.classList.remove('show');
-                // Remove from DOM after transition ends
-                notification.addEventListener('transitionend', () => {
-                    notification.remove();
-                }, { once: true });
-            }, duration);
+            row.innerHTML = `
+                <td class="py-3 px-4 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">${formattedTimestamp}</td>
+                <td class="py-3 px-4 text-sm font-medium">${log.action.replace('_', ' ')}</td> <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">${log.details}</td>
+                `;
         }
 
 
-        // --- Placeholders for other sections ---
+        // --- Placeholder for Reports ---
         function loadReportData() { console.log("Load Report Data - Placeholder"); }
-        function loadAuditLog() { console.log("Load Audit Log - Placeholder"); }
 
     </script>
 
