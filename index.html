@@ -288,11 +288,22 @@
             color: #d1d5db; /* gray-300 */
         }
 
+        /* Loading/Empty state in table */
+        .table-state-message td {
+            text-align: center;
+            padding: 1.5rem; /* py-6 */
+            color: #6b7280; /* gray-500 */
+        }
+        .dark .table-state-message td {
+             color: #9ca3af; /* gray-400 */
+        }
+
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-slate-900 text-gray-900 dark:text-slate-200">
 
-    <div class="sidebar p-5 shrink-0"> <div class="flex items-center justify-center mb-8">
+    <div class="sidebar p-5 shrink-0">
+        <div class="flex items-center justify-center mb-8">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-emerald-400 dark:text-emerald-300 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
             </svg>
@@ -356,11 +367,10 @@
                  // Add listener to update icons when theme changes via the button
                  document.getElementById('theme-toggle')?.addEventListener('click', () => {
                      const isDark = document.documentElement.classList.contains('dark');
-                     // The theme will be toggled *after* this click, so check the *opposite*
-                     if (!isDark) { // Will become dark
+                     if (!isDark) {
                          darkIcon?.classList.remove('hidden');
                          lightIcon?.classList.add('hidden');
-                     } else { // Will become light
+                     } else {
                          darkIcon?.classList.add('hidden');
                          lightIcon?.classList.remove('hidden');
                      }
@@ -383,7 +393,9 @@
     </div>
 
     <div class="main-content p-4 sm:p-6 flex-1 transition-all duration-300">
-        <div class="container mx-auto max-w-7xl"> <div class="section active" id="inventory-section">
+        <div class="container mx-auto max-w-7xl">
+
+            <div class="section active" id="inventory-section">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <h1 class="text-2xl font-bold section-title flex-shrink-0">Inventory Management</h1>
                     <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
@@ -400,21 +412,25 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <div class="card p-4">
                         <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Items</h3>
-                        <p class="text-2xl font-semibold mt-1">185</p> </div>
+                        <p id="summary-total-items" class="text-2xl font-semibold mt-1">0</p>
+                    </div>
                     <div class="card p-4">
                         <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Items Low Stock</h3>
-                        <p class="text-2xl font-semibold mt-1 text-yellow-600 dark:text-yellow-400">12</p> </div>
+                        <p id="summary-low-stock" class="text-2xl font-semibold mt-1 text-yellow-600 dark:text-yellow-400">0</p>
+                    </div>
                      <div class="card p-4">
                         <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Out of Stock</h3>
-                        <p class="text-2xl font-semibold mt-1 text-red-600 dark:text-red-400">5</p> </div>
+                        <p id="summary-out-of-stock" class="text-2xl font-semibold mt-1 text-red-600 dark:text-red-400">0</p>
+                    </div>
                      <div class="card p-4">
                         <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Value</h3>
-                        <p class="text-2xl font-semibold mt-1">$12,345.67</p> </div>
+                        <p id="summary-total-value" class="text-2xl font-semibold mt-1">$0.00</p>
+                    </div>
                 </div>
 
                 <div class="card">
                      <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-                         <input type="text" placeholder="Search items..." class="form-input">
+                         <input type="text" placeholder="Search items..." class="form-input" id="inventory-search">
                      </div>
                      <div class="table-container overflow-x-auto">
                         <table id="inventory-table" class="min-w-full">
@@ -429,30 +445,17 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150">
-                                    <td class="py-3 px-4 text-sm">SKU001</td>
-                                    <td class="py-3 px-4 font-medium">Heavy Duty Widget</td>
-                                    <td class="py-3 px-4 text-sm">Widgets</td>
-                                    <td class="py-3 px-4 text-sm text-center">150</td>
-                                    <td class="py-3 px-4 text-sm">
-                                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-700 dark:text-emerald-100">
-                                            In Stock
-                                        </span>
-                                    </td>
-                                    <td class="py-3 px-4 text-sm text-center">
-                                        <button class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mr-2 p-1 rounded hover:bg-blue-100 dark:hover:bg-slate-700" title="Edit">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                        </button>
-                                        <button class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-100 dark:hover:bg-slate-700" title="Delete">
-                                           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                        </button>
-                                    </td>
+                                <tr class="table-state-message" id="inventory-loading">
+                                    <td colspan="6">Loading inventory...</td>
+                                </tr>
+                                <tr class="table-state-message hidden" id="inventory-empty">
+                                     <td colspan="6">No inventory items found. Add one to get started!</td>
                                 </tr>
                                 </tbody>
                         </table>
                     </div>
-                     <div class="p-4 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">
-                         Showing 1-10 of 185 items
+                     <div class="p-4 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400" id="inventory-footer">
+                         Showing <span id="item-count-start">0</span>-<span id="item-count-end">0</span> of <span id="item-count-total">0</span> items
                          </div>
                 </div>
             </div>
@@ -471,11 +474,10 @@
                  <h1 class="text-2xl font-bold section-title">Audit Log</h1>
                  <div class="card p-6">
                      <p>Audit log section content goes here. A table listing recent activities.</p>
-                      <div class="mt-4 border border-gray-200 dark:border-gray-700 rounded p-4">
+                     <div class="mt-4 border border-gray-200 dark:border-gray-700 rounded p-4">
                          <p class="text-gray-500 dark:text-gray-400">Timestamp | User | Action | Details</p>
-                         <p class="mt-2">Apr 23, 2025 01:30 AM | User Account | Added Item | SKU: WIDG-005</p>
-                         <p class="mt-2">Apr 22, 2025 04:15 PM | User Account | Updated Quantity | SKU: GIZM-001 (-5)</p>
-                     </div>
+                         <p class="mt-2">Apr 23, 2025 01:50 AM | System | Initialized Database</p>
+                         </div>
                  </div>
             </div>
 
@@ -517,15 +519,16 @@
                 </svg>
             </button>
             <h2 class="text-xl font-semibold mb-4">Add New Inventory Item</h2>
-            <form id="add-item-form">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <form id="add-item-form" novalidate> <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label for="item-sku" class="form-label">SKU / Item Code</label>
-                        <input type="text" id="item-sku" name="sku" class="form-input" required>
+                        <input type="text" id="item-sku" name="id" class="form-input" required>
+                        <p class="text-red-500 text-xs mt-1 hidden" id="sku-error">SKU is required.</p>
                     </div>
                     <div>
                         <label for="item-name" class="form-label">Item Name</label>
                         <input type="text" id="item-name" name="name" class="form-input" required>
+                         <p class="text-red-500 text-xs mt-1 hidden" id="name-error">Name is required.</p>
                     </div>
                 </div>
                  <div class="mb-4">
@@ -536,10 +539,12 @@
                      <div>
                         <label for="item-quantity" class="form-label">Initial Quantity</label>
                         <input type="number" id="item-quantity" name="quantity" class="form-input" value="0" min="0" required>
+                         <p class="text-red-500 text-xs mt-1 hidden" id="quantity-error">Quantity must be 0 or more.</p>
                      </div>
                      <div>
                         <label for="item-cost" class="form-label">Unit Cost (Optional)</label>
                         <input type="number" id="item-cost" name="cost" class="form-input" step="0.01" min="0">
+                         <p class="text-red-500 text-xs mt-1 hidden" id="cost-error">Cost cannot be negative.</p>
                      </div>
                  </div>
                  <div class="mb-4">
@@ -547,7 +552,7 @@
                     <textarea id="item-notes" name="notes" rows="3" class="form-input"></textarea>
                  </div>
                  <div class="flex justify-end space-x-3 mt-6">
-                     <button type="button" class="tw-button tw-button-secondary" onclick="document.getElementById('add-item-modal').classList.add('hidden')">Cancel</button>
+                     <button type="button" class="tw-button tw-button-secondary" id="cancel-add-item">Cancel</button>
                      <button type="submit" class="tw-button tw-button-primary">Add Item</button>
                  </div>
             </form>
@@ -556,130 +561,247 @@
 
 
     <script>
-        // Paste the entire content of the 'Service Worker Registration (app.js / inline script)' immersive here
-        // Including the service worker registration, theme handling, navigation, modal logic, etc.
-
-        // --- Start of pasted content ---
-
-        // Check if the browser supports service workers
+        // --- Service Worker Registration ---
         if ('serviceWorker' in navigator) {
-          // Register the service worker after the page has loaded
           window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js') // Path to your service worker file
+            navigator.serviceWorker.register('/sw.js')
               .then(registration => {
                 console.log('Service Worker registered successfully with scope:', registration.scope);
-
-                // --- Optional: Listen for updates ---
                 registration.addEventListener('updatefound', () => {
-                  // A new service worker is installing.
                   const installingWorker = registration.installing;
                   console.log('A new service worker is installing:', installingWorker);
-
                   installingWorker.addEventListener('statechange', () => {
                     if (installingWorker.state === 'installed') {
                       if (navigator.serviceWorker.controller) {
                         console.log('New content is available; please refresh.');
-                        // Example: showRefreshUI(registration); // Defined below if needed
                       } else {
                         console.log('Content is cached for offline use.');
                       }
                     }
                   });
                 });
-
               })
               .catch(error => {
                 console.error('Service Worker registration failed:', error);
               });
           });
-
-          // --- Optional: Detect controller change ---
           navigator.serviceWorker.addEventListener('controllerchange', () => {
-            console.log('Controller changed. Page may be using a new service worker.');
-            // window.location.reload(); // Uncomment to force reload on controller change
+            console.log('Controller changed.');
           });
-
         } else {
-          console.log('Service Workers are not supported in this browser.');
+          console.log('Service Workers are not supported.');
         }
 
-        // --- Optional: UI function to prompt for refresh ---
-        /*
-        function showRefreshUI(registration) {
-          const refreshButton = document.createElement('button');
-          // Add styling as needed...
-          refreshButton.textContent = 'New version available. Refresh?';
-          refreshButton.addEventListener('click', () => {
-            if (!registration.waiting) return;
-            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-            refreshButton.remove();
+        // --- IndexedDB Setup ---
+        const DB_NAME = 'ChainSyncLiteDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'inventory';
+        let db; // Variable to hold the database instance
+
+        function initDB() {
+          return new Promise((resolve, reject) => {
+            // Check if DB is already initialized
+            if (db) {
+              return resolve(db);
+            }
+            console.log('[DB] Initializing...');
+
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+            request.onerror = (event) => {
+              console.error('[DB] Error opening database:', event.target.error);
+              reject('Error opening database');
+            };
+
+            request.onsuccess = (event) => {
+              db = event.target.result;
+              console.log('[DB] Database opened successfully.');
+              resolve(db);
+            };
+
+            // This event only runs if the database version changes
+            request.onupgradeneeded = (event) => {
+              console.log('[DB] Upgrade needed or database creation.');
+              const tempDb = event.target.result;
+
+              // Create object store if it doesn't exist
+              if (!tempDb.objectStoreNames.contains(STORE_NAME)) {
+                console.log(`[DB] Creating object store: ${STORE_NAME}`);
+                // Use 'id' (SKU) as the key path. Ensure it's unique.
+                const objectStore = tempDb.createObjectStore(STORE_NAME, { keyPath: 'id' });
+
+                // Create indexes for searching/sorting (optional but recommended)
+                objectStore.createIndex('name', 'name', { unique: false });
+                objectStore.createIndex('category', 'category', { unique: false });
+                console.log('[DB] Object store and indexes created.');
+              }
+            };
           });
-          document.body.appendChild(refreshButton);
         }
-        // Remember to add the message listener in sw.js if using this
-        */
+
+        // --- IndexedDB CRUD Operations ---
+
+        /**
+         * Adds an item to the IndexedDB store.
+         * @param {object} item - The item object to add. Must have a unique 'id'.
+         * @returns {Promise<void>} A promise that resolves when the item is added or rejects on error.
+         */
+        function addItemToDB(item) {
+          return new Promise((resolve, reject) => {
+            initDB().then(dbInstance => {
+              const transaction = dbInstance.transaction([STORE_NAME], 'readwrite');
+              const store = transaction.objectStore(STORE_NAME);
+              const request = store.add(item);
+
+              request.onsuccess = () => {
+                console.log('[DB] Item added successfully:', item);
+                resolve();
+              };
+
+              request.onerror = (event) => {
+                console.error('[DB] Error adding item:', event.target.error);
+                // Handle specific errors like constraint errors (duplicate key)
+                if (event.target.error.name === 'ConstraintError') {
+                    reject(`Error: Item with SKU '${item.id}' already exists.`);
+                } else {
+                    reject('Error adding item to database.');
+                }
+              };
+            }).catch(reject); // Propagate initDB errors
+          });
+        }
+
+        /**
+         * Retrieves all items from the IndexedDB store.
+         * @returns {Promise<Array<object>>} A promise that resolves with an array of items or rejects on error.
+         */
+        function getAllItemsFromDB() {
+          return new Promise((resolve, reject) => {
+            initDB().then(dbInstance => {
+              const transaction = dbInstance.transaction([STORE_NAME], 'readonly');
+              const store = transaction.objectStore(STORE_NAME);
+              const request = store.getAll(); // Simple way to get all items
+
+              request.onsuccess = (event) => {
+                console.log('[DB] Retrieved all items.');
+                resolve(event.target.result || []); // Return empty array if no items
+              };
+
+              request.onerror = (event) => {
+                console.error('[DB] Error getting all items:', event.target.error);
+                reject('Error retrieving items from database.');
+              };
+            }).catch(reject); // Propagate initDB errors
+          });
+        }
 
         // --- Application Logic ---
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => { // Make async to await DB init
             const navLinks = document.querySelectorAll('.nav-link');
             const sections = document.querySelectorAll('.main-content .section');
             const themeToggleButton = document.getElementById('theme-toggle');
-            const addItemButton = document.getElementById('add-item-button'); // Corrected ID
+            const addItemButton = document.getElementById('add-item-button');
             const modal = document.getElementById('add-item-modal');
             const closeModalButton = document.getElementById('close-modal');
+            const cancelAddItemButton = document.getElementById('cancel-add-item');
             const addItemForm = document.getElementById('add-item-form');
+            const inventoryTableBody = document.querySelector('#inventory-table tbody');
+            const inventoryLoadingRow = document.getElementById('inventory-loading');
+            const inventoryEmptyRow = document.getElementById('inventory-empty');
 
-            // Function to switch sections
-            function showSection(targetId) {
-                sections.forEach(section => {
-                    if (!section) return; // Guard against null sections
-                    if (section.id === targetId + '-section') {
-                        section.classList.add('active');
-                        section.classList.remove('hidden');
-                    } else {
-                        section.classList.remove('active');
-                        section.classList.add('hidden');
-                    }
-                });
-
-                navLinks.forEach(link => {
-                     if (!link) return; // Guard against null links
-                    if (link.id === 'nav-' + targetId) {
-                        link.classList.add('active');
-                    } else {
-                        link.classList.remove('active');
-                    }
-                });
-                localStorage.setItem('activeSection', targetId);
+            // --- Initial DB Setup ---
+            try {
+                await initDB(); // Ensure DB is ready before proceeding
+                console.log("Database initialized on DOMContentLoaded.");
+            } catch (error) {
+                console.error("Failed to initialize database:", error);
+                // Optionally display an error message to the user
+                inventoryLoadingRow.querySelector('td').textContent = 'Error loading database.';
+                return; // Stop further execution if DB fails
             }
 
-            // Navigation click handling
-            navLinks.forEach(link => {
+            // --- UI Element Setup ---
+            setupNavigation(navLinks, sections);
+            setupThemeToggle(themeToggleButton);
+            setupModal(addItemButton, modal, closeModalButton, cancelAddItemButton, addItemForm);
+            setupInventorySearch(); // Setup search listener
+
+            // --- Initial Section Loading ---
+            loadActiveSection();
+
+        }); // End DOMContentLoaded
+
+        // --- UI Helper Functions ---
+
+        function setupNavigation(navLinks, sections) {
+             navLinks.forEach(link => {
                 if (!link) return;
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
                     const href = link.getAttribute('href');
-                    if (!href || href === '#') return; // Prevent errors on invalid href
+                    if (!href || href === '#') return;
                     const targetId = href.substring(1);
-                    showSection(targetId);
+                    showSection(targetId, sections, navLinks);
                 });
             });
+        }
 
-            // Restore last active section on page load
+        function showSection(targetId, sections, navLinks) {
+            let sectionFound = false;
+            sections.forEach(section => {
+                if (!section) return;
+                if (section.id === targetId + '-section') {
+                    section.classList.add('active');
+                    section.classList.remove('hidden');
+                    sectionFound = true;
+                    // Load data specific to this section if needed
+                    if (targetId === 'inventory') {
+                        loadInventoryData(); // Reload inventory when navigating to it
+                    } else if (targetId === 'reports') {
+                        loadReportData();
+                    } else if (targetId === 'audit') {
+                        loadAuditLog();
+                    }
+                } else {
+                    section.classList.remove('active');
+                    section.classList.add('hidden');
+                }
+            });
+
+            navLinks.forEach(link => {
+                 if (!link) return;
+                if (link.id === 'nav-' + targetId) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            if (sectionFound) {
+                localStorage.setItem('activeSection', targetId);
+            } else {
+                 console.warn(`Section with ID '${targetId}-section' not found. Defaulting to inventory.`);
+                 showSection('inventory', sections, navLinks); // Fallback to inventory
+            }
+        }
+
+        function loadActiveSection() {
+            const sections = document.querySelectorAll('.main-content .section');
+            const navLinks = document.querySelectorAll('.nav-link');
             const lastActiveSection = localStorage.getItem('activeSection');
-            // Default to inventory if nothing is stored or the stored value is invalid
             const validSections = ['inventory', 'reports', 'audit', 'settings'];
             const sectionToShow = (lastActiveSection && validSections.includes(lastActiveSection)) ? lastActiveSection : 'inventory';
 
-            // Ensure the default active classes are handled correctly before applying the stored one
-            document.querySelector('.nav-link.active')?.classList.remove('active');
-            document.querySelector('.main-content .section.active')?.classList.remove('active');
-            // Hide all sections initially, then show the correct one
+            // Hide all sections initially
             sections.forEach(s => s?.classList.add('hidden'));
-            showSection(sectionToShow);
+            // Remove active class from all nav links
+            navLinks.forEach(l => l?.classList.remove('active'));
+
+            showSection(sectionToShow, sections, navLinks);
+        }
 
 
-            // --- Dark Mode Toggle ---
+        function setupThemeToggle(themeToggleButton) {
             const applyTheme = (theme) => {
                 const darkIcon = document.getElementById('theme-toggle-dark-icon');
                 const lightIcon = document.getElementById('theme-toggle-light-icon');
@@ -697,13 +819,11 @@
                 localStorage.setItem('theme', theme);
             };
 
-            // Check for saved theme preference or use system preference
             const savedTheme = localStorage.getItem('theme');
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             const initialTheme = savedTheme ? savedTheme : (prefersDark ? 'dark' : 'light');
-            applyTheme(initialTheme); // Apply theme immediately
+            applyTheme(initialTheme);
 
-            // Add theme toggle button listener
             if (themeToggleButton) {
                 themeToggleButton.addEventListener('click', () => {
                     const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
@@ -712,131 +832,346 @@
             } else {
                  console.warn("Theme toggle button not found");
             }
+        }
 
-            // --- Modal Handling ---
-            if (addItemButton && modal && closeModalButton) {
+        function setupModal(addItemButton, modal, closeModalButton, cancelAddItemButton, addItemForm) {
+             const closeAction = () => {
+                 modal.classList.add('hidden');
+                 modal.classList.remove('flex');
+                 addItemForm.reset(); // Reset form on close/cancel
+                 clearFormErrors(addItemForm); // Clear any validation errors
+             };
+
+             if (addItemButton && modal && closeModalButton && cancelAddItemButton && addItemForm) {
                 addItemButton.addEventListener('click', () => {
                     modal.classList.remove('hidden');
                     modal.classList.add('flex');
+                    // Optionally focus the first input
+                    addItemForm.querySelector('input')?.focus();
                 });
 
-                closeModalButton.addEventListener('click', () => {
-                    modal.classList.add('hidden');
-                    modal.classList.remove('flex');
-                });
+                closeModalButton.addEventListener('click', closeAction);
+                cancelAddItemButton.addEventListener('click', closeAction);
 
                 modal.addEventListener('click', (event) => {
-                    if (event.target === modal) {
-                        modal.classList.add('hidden');
-                        modal.classList.remove('flex');
+                    if (event.target === modal) { // Click on backdrop
+                        closeAction();
                     }
                 });
+
+                addItemForm.addEventListener('submit', handleAddItemSubmit);
+
             } else {
-                console.warn("Modal elements (button, modal, close button) not all found.");
+                console.warn("Modal elements not all found.");
             }
-
-            // --- Add Item Form Submission ---
-            if (addItemForm) {
-                addItemForm.addEventListener('submit', (e) => {
-                    e.preventDefault(); // Prevent default form submission
-                    const formData = new FormData(addItemForm);
-                    const newItem = Object.fromEntries(formData.entries());
-                    console.log('New Item Data:', newItem);
-                    // TODO: Add logic to save the item (e.g., to IndexedDB)
-                    // TODO: Update the inventory table display
-                    // TODO: Add user feedback (e.g., success message)
-
-                    // Close the modal and reset the form
-                    modal?.classList.add('hidden');
-                    modal?.classList.remove('flex');
-                    addItemForm.reset();
-                });
-            }
-
-            // --- Initial Data Loading ---
-            if (sectionToShow === 'inventory') {
-                loadInventoryData();
-            } else if (sectionToShow === 'reports') {
-                 loadReportData();
-            } else if (sectionToShow === 'audit') {
-                 loadAuditLog();
-            }
-            // Settings section doesn't typically need initial data load in the same way
-
-        }); // End DOMContentLoaded
-
-        // --- Data Loading Functions ---
-        function loadInventoryData() {
-            console.log("Load Inventory Data");
-            const tableBody = document.querySelector('#inventory-table tbody');
-            if (!tableBody) {
-                 console.error("Inventory table body not found!");
-                 return;
-            }
-            tableBody.innerHTML = ''; // Clear existing rows
-
-            // Sample data (replace with actual data source like IndexedDB)
-            const items = [
-                { id: 'SKU001', name: 'Heavy Duty Widget', category: 'Widgets', quantity: 150, status: 'In Stock' },
-                { id: 'SKU002', name: 'Standard Gizmo', category: 'Gizmos', quantity: 0, status: 'Out of Stock' },
-                { id: 'SKU003', name: 'Premium Thingamajig', category: 'Thingamajigs', quantity: 35, status: 'Low Stock' },
-                { id: 'SKU004', name: 'Basic Doodad', category: 'Doodads', quantity: 200, status: 'In Stock' },
-                { id: 'SKU005', name: 'Advanced Sprocket', category: 'Sprockets', quantity: 5, status: 'Low Stock' },
-            ];
-
-            if (items.length === 0) {
-                 const row = tableBody.insertRow();
-                 row.className = 'text-center';
-                 const cell = row.insertCell();
-                 cell.colSpan = 6; // Span all columns
-                 cell.className = 'py-6 px-4 text-gray-500 dark:text-gray-400';
-                 cell.textContent = 'No inventory items found.';
-                 return;
-            }
-
-            items.forEach(item => {
-                const row = tableBody.insertRow();
-                row.className = 'border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors duration-150';
-
-                let statusClass = '';
-                if (item.quantity <= 0) {
-                    item.status = 'Out of Stock';
-                    statusClass = 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100';
-                } else if (item.quantity <= 50) { // Example threshold for low stock
-                     item.status = 'Low Stock';
-                     statusClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100';
-                } else {
-                     item.status = 'In Stock';
-                     statusClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-700 dark:text-emerald-100';
-                }
-
-
-                row.innerHTML = `
-                    <td class="py-3 px-4 text-sm whitespace-nowrap">${item.id}</td>
-                    <td class="py-3 px-4 font-medium whitespace-nowrap">${item.name}</td>
-                    <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">${item.category || '-'}</td>
-                    <td class="py-3 px-4 text-sm text-center">${item.quantity}</td>
-                    <td class="py-3 px-4 text-sm">
-                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">
-                            ${item.status}
-                        </span>
-                    </td>
-                    <td class="py-3 px-4 text-sm text-center whitespace-nowrap">
-                        <button class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mr-2 p-1 rounded hover:bg-blue-100 dark:hover:bg-slate-700" title="Edit">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                        </button>
-                        <button class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-100 dark:hover:bg-slate-700" title="Delete">
-                           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        </button>
-                    </td>
-                `;
-            });
         }
 
+        function clearFormErrors(form) {
+            form.querySelectorAll('.text-red-500').forEach(el => el.classList.add('hidden'));
+            form.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500')); // Assuming you add error borders
+        }
+
+        function displayFormError(fieldId, message) {
+            const errorEl = document.getElementById(`${fieldId}-error`);
+            const inputEl = document.getElementById(`item-${fieldId}`); // Assuming input IDs follow pattern item-fieldName
+            if (errorEl) {
+                errorEl.textContent = message;
+                errorEl.classList.remove('hidden');
+            }
+             if (inputEl) {
+                 inputEl.classList.add('border-red-500'); // Add visual cue to input
+                 // Optional: Add aria-invalid attribute for accessibility
+                 inputEl.setAttribute('aria-invalid', 'true');
+             }
+        }
+
+        async function handleAddItemSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            clearFormErrors(form); // Clear previous errors
+
+            const formData = new FormData(form);
+            const newItem = {};
+            let isValid = true;
+
+            // Basic Validation
+            const sku = formData.get('id')?.trim();
+            const name = formData.get('name')?.trim();
+            const quantity = formData.get('quantity');
+            const cost = formData.get('cost');
+
+            if (!sku) {
+                displayFormError('sku', 'SKU is required.');
+                isValid = false;
+            }
+            if (!name) {
+                displayFormError('name', 'Name is required.');
+                isValid = false;
+            }
+            if (quantity === null || quantity === '' || parseInt(quantity) < 0) {
+                 displayFormError('quantity', 'Quantity must be 0 or more.');
+                 isValid = false;
+            }
+             if (cost !== null && cost !== '' && parseFloat(cost) < 0) {
+                 displayFormError('cost', 'Cost cannot be negative.');
+                 isValid = false;
+            }
+
+            if (!isValid) {
+                return; // Stop submission if validation fails
+            }
+
+            // Populate newItem object (use validated/trimmed values)
+            newItem.id = sku;
+            newItem.name = name;
+            newItem.category = formData.get('category')?.trim() || '';
+            newItem.quantity = parseInt(quantity); // Ensure quantity is a number
+            newItem.cost = (cost !== null && cost !== '') ? parseFloat(cost) : null; // Store cost as number or null
+            newItem.notes = formData.get('notes')?.trim() || '';
+            // Add timestamp for creation/update
+            newItem.lastUpdated = new Date().toISOString();
+
+
+            console.log('Attempting to add item:', newItem);
+
+            try {
+                await addItemToDB(newItem);
+                console.log('Item added successfully via form.');
+                // Close modal
+                document.getElementById('add-item-modal').classList.add('hidden');
+                document.getElementById('add-item-modal').classList.remove('flex');
+                form.reset();
+                // Refresh inventory display
+                await loadInventoryData();
+                // TODO: Add success feedback (e.g., a temporary message)
+            } catch (error) {
+                console.error('Failed to add item:', error);
+                // Display error to the user, potentially in the modal
+                // Check for specific constraint error
+                 if (typeof error === 'string' && error.includes('already exists')) {
+                     displayFormError('sku', error); // Show error next to SKU field
+                 } else {
+                     // Generic error message at the bottom of the form?
+                     alert(`Error saving item: ${error}`); // Simple alert for now
+                 }
+            }
+        }
+
+
+        // --- Data Loading & Display ---
+
+        async function loadInventoryData(searchTerm = '') {
+            console.log(`Loading inventory data (Search: "${searchTerm}")...`);
+            const tableBody = document.querySelector('#inventory-table tbody');
+            const loadingRow = document.getElementById('inventory-loading');
+            const emptyRow = document.getElementById('inventory-empty');
+            const footerInfo = document.getElementById('inventory-footer');
+
+            if (!tableBody || !loadingRow || !emptyRow || !footerInfo) {
+                console.error("Inventory table elements not found!");
+                return;
+            }
+
+            // Show loading state, hide empty state
+            loadingRow.classList.remove('hidden');
+            emptyRow.classList.add('hidden');
+            tableBody.querySelectorAll('tr:not(#inventory-loading):not(#inventory-empty)').forEach(row => row.remove()); // Clear previous data rows
+            footerInfo.classList.add('hidden'); // Hide footer while loading
+
+            try {
+                let items = await getAllItemsFromDB();
+                console.log(`[DB] Retrieved ${items.length} items.`);
+
+                // --- Filtering (Case-insensitive) ---
+                 if (searchTerm) {
+                     const lowerSearchTerm = searchTerm.toLowerCase();
+                     items = items.filter(item =>
+                         item.id.toLowerCase().includes(lowerSearchTerm) ||
+                         item.name.toLowerCase().includes(lowerSearchTerm) ||
+                         item.category.toLowerCase().includes(lowerSearchTerm)
+                     );
+                      console.log(`Filtered down to ${items.length} items matching "${searchTerm}".`);
+                 }
+
+
+                // Hide loading row
+                loadingRow.classList.add('hidden');
+
+                if (items.length === 0) {
+                    // Show empty state if no items match search or DB is empty
+                    emptyRow.classList.remove('hidden');
+                    tableBody.querySelectorAll('tr:not(#inventory-loading):not(#inventory-empty)').forEach(row => row.remove()); // Ensure table is clear
+                    updateSummaryCards([]); // Update summary with empty data
+                    updateInventoryFooter(0, 0, 0); // Update footer info
+                    footerInfo.classList.remove('hidden');
+                } else {
+                    // Populate table if items exist
+                    emptyRow.classList.add('hidden');
+                    tableBody.querySelectorAll('tr:not(#inventory-loading):not(#inventory-empty)').forEach(row => row.remove()); // Clear just in case
+                    items.forEach(item => renderInventoryRow(item, tableBody));
+                    updateSummaryCards(items); // Update summary cards
+                    updateInventoryFooter(1, items.length, items.length); // Update footer (basic for now)
+                    footerInfo.classList.remove('hidden');
+                }
+
+            } catch (error) {
+                console.error("Error loading inventory data:", error);
+                loadingRow.querySelector('td').textContent = 'Error loading inventory.';
+                emptyRow.classList.add('hidden');
+                updateSummaryCards([]); // Clear summary on error
+                updateInventoryFooter(0, 0, 0);
+                footerInfo.classList.remove('hidden');
+            }
+        }
+
+        function renderInventoryRow(item, tableBody) {
+             const row = tableBody.insertRow(); // Inserts at the end by default
+             // Ensure loading/empty rows are not counted or affected directly
+             row.className = 'border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors duration-150';
+             row.dataset.itemId = item.id; // Add data attribute for easier selection
+
+             let statusClass = '';
+             let statusText = '';
+             const lowStockThreshold = 10; // Example threshold
+
+             if (item.quantity <= 0) {
+                 statusText = 'Out of Stock';
+                 statusClass = 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100';
+             } else if (item.quantity <= lowStockThreshold) {
+                  statusText = 'Low Stock';
+                  statusClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100';
+             } else {
+                  statusText = 'In Stock';
+                  statusClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-700 dark:text-emerald-100';
+             }
+
+             row.innerHTML = `
+                <td class="py-3 px-4 text-sm whitespace-nowrap">${item.id}</td>
+                <td class="py-3 px-4 font-medium whitespace-nowrap">${item.name}</td>
+                <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">${item.category || '-'}</td>
+                <td class="py-3 px-4 text-sm text-center">${item.quantity}</td>
+                <td class="py-3 px-4 text-sm">
+                    <span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">
+                        ${statusText}
+                    </span>
+                </td>
+                <td class="py-3 px-4 text-sm text-center whitespace-nowrap">
+                    <button class="edit-item-btn text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mr-2 p-1 rounded hover:bg-blue-100 dark:hover:bg-slate-700" title="Edit" data-id="${item.id}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                    </button>
+                    <button class="delete-item-btn text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-100 dark:hover:bg-slate-700" title="Delete" data-id="${item.id}" data-name="${item.name}">
+                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                </td>
+            `;
+
+             // Add event listeners for edit/delete buttons after inserting row
+             row.querySelector('.edit-item-btn')?.addEventListener('click', handleEditItem);
+             row.querySelector('.delete-item-btn')?.addEventListener('click', handleDeleteItem);
+        }
+
+        function updateSummaryCards(items) {
+            const totalItemsEl = document.getElementById('summary-total-items');
+            const lowStockEl = document.getElementById('summary-low-stock');
+            const outOfStockEl = document.getElementById('summary-out-of-stock');
+            const totalValueEl = document.getElementById('summary-total-value');
+
+            if (!totalItemsEl || !lowStockEl || !outOfStockEl || !totalValueEl) return;
+
+            const lowStockThreshold = 10; // Must match threshold used in renderInventoryRow
+            let lowStockCount = 0;
+            let outOfStockCount = 0;
+            let totalValue = 0;
+
+            items.forEach(item => {
+                if (item.quantity <= 0) {
+                    outOfStockCount++;
+                } else if (item.quantity <= lowStockThreshold) {
+                    lowStockCount++;
+                }
+                if (item.cost && item.quantity > 0) {
+                    totalValue += item.cost * item.quantity;
+                }
+            });
+
+            totalItemsEl.textContent = items.length;
+            lowStockEl.textContent = lowStockCount;
+            outOfStockEl.textContent = outOfStockCount;
+            // Format currency (simple example)
+            totalValueEl.textContent = `$${totalValue.toFixed(2)}`;
+        }
+
+        function updateInventoryFooter(start, end, total) {
+             const startEl = document.getElementById('item-count-start');
+             const endEl = document.getElementById('item-count-end');
+             const totalEl = document.getElementById('item-count-total');
+             if (startEl && endEl && totalEl) {
+                 startEl.textContent = total > 0 ? start : 0;
+                 endEl.textContent = end;
+                 totalEl.textContent = total;
+             }
+        }
+
+        function setupInventorySearch() {
+            const searchInput = document.getElementById('inventory-search');
+            if (searchInput) {
+                let debounceTimer;
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(debounceTimer);
+                    const searchTerm = e.target.value;
+                    // Debounce the search to avoid excessive DB queries
+                    debounceTimer = setTimeout(() => {
+                        loadInventoryData(searchTerm);
+                    }, 300); // Adjust delay as needed (e.g., 300ms)
+                });
+            }
+        }
+
+        // --- Placeholder Functions for Edit/Delete ---
+        function handleEditItem(event) {
+            const button = event.currentTarget;
+            const itemId = button.dataset.id;
+            console.log("Edit item clicked:", itemId);
+            // TODO: Implement edit functionality
+            // 1. Get item data from DB using itemId
+            // 2. Populate the modal form with the item data
+            // 3. Change modal title/button text to "Edit Item" / "Save Changes"
+            // 4. Show the modal
+            // 5. Update form submission handler to perform an update instead of add
+            alert(`Edit functionality for item ${itemId} not yet implemented.`);
+        }
+
+        async function handleDeleteItem(event) {
+            const button = event.currentTarget;
+            const itemId = button.dataset.id;
+            const itemName = button.dataset.name || 'this item'; // Get name for confirmation
+            console.log("Delete item clicked:", itemId);
+
+            if (confirm(`Are you sure you want to delete "${itemName}" (SKU: ${itemId})? This action cannot be undone.`)) {
+                console.log(`Proceeding with deletion of ${itemId}`);
+                // TODO: Implement delete functionality in IndexedDB
+                // try {
+                //    await deleteItemFromDB(itemId); // Need to create this DB function
+                //    console.log(`Item ${itemId} deleted from DB.`);
+                //    // Remove row from table directly for immediate feedback
+                //    button.closest('tr')?.remove();
+                //    // Optionally, reload all data to update summary etc.
+                //    await loadInventoryData(document.getElementById('inventory-search')?.value || '');
+                // } catch (error) {
+                //    console.error(`Failed to delete item ${itemId}:`, error);
+                //    alert(`Error deleting item: ${error}`);
+                // }
+                 alert(`Delete functionality for item ${itemId} not yet implemented.`);
+            } else {
+                 console.log(`Deletion cancelled for ${itemId}`);
+            }
+        }
+
+
+        // --- Placeholders for other sections ---
         function loadReportData() { console.log("Load Report Data - Placeholder"); }
         function loadAuditLog() { console.log("Load Audit Log - Placeholder"); }
 
-        // --- End of pasted content ---
     </script>
 
 </body>
