@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d9488">
+    <title>ChainSync Lite - Professional Inventory Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Inter Font */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        /* Base styles */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+            display: flex; /* Use flex for layout */
+            min-height: 100vh; /* Ensure body takes full height */
+            flex-direction: column; /* Stack elements vertically on small screens */
+        }
+
+        /* Sidebar styles */
+        .sidebar {
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            width: 100%; /* Full width on mobile */
+            height: auto; /* Auto height on mobile */
+            transition: width 0.3s ease; /* Smooth transition for width */
+        }
+
+        /* Sidebar styles for medium screens and up */
+        @media (min-width: 768px) { /* md breakpoint */
+            body {
+                flex-direction: row; /* Row layout on larger screens */
+            }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100%;
+                width: 16rem; /* 64 * 0.25rem = 256px */
+                overflow-y: auto;
+            }
+            .main-content {
+                margin-left: 16rem; /* Adjust margin to accommodate fixed sidebar */
+                flex: 1; /* Allow main content to grow */
+            }
+        }
+
+
+        /* Navigation link styles */
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem; /* py-3 px-4 */
+            margin-bottom: 0.25rem; /* mb-1 */
+            border-radius: 0.375rem; /* rounded-md */
+            transition: all 0.2s;
+            color: #e2e8f0; /* slate-200 */
+            text-decoration: none; /* Remove underline */
+        }
+
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .nav-link.active {
+            background-color: #0d9488; /* teal-600 */
+            color: white;
+            font-weight: 500; /* font-medium */
+        }
+
+        .nav-link svg {
+            margin-right: 0.75rem; /* mr-3 */
+            width: 1.25rem; /* w-5 */
+            height: 1.25rem; /* h-5 */
+            flex-shrink: 0; /* Prevent icon shrinking */
+        }
+
+        /* Primary button styles */
+        .tw-button {
+             display: inline-flex; /* Use inline-flex */
+             align-items: center; /* Center items vertically */
+             justify-content: center; /* Center items horizontally */
+             padding: 0.5rem 1rem; /* py-2 px-4 */
+             border-radius: 0.375rem; /* rounded-md */
+             font-size: 0.875rem; /* text-sm */
+             font-weight: 500; /* font-medium */
+             transition: background-color 0.2s;
+             cursor: pointer;
+             border: 1px solid transparent; /* Base border */
+        }
+
+        .tw-button-primary {
+            background-color: #0d9488; /* teal-600 */
+            color: white;
+        }
+
+        .tw-button-primary:hover {
+            background-color: #0f766e; /* teal-700 */
+        }
+
+        .tw-button-secondary {
+            background-color: #e2e8f0; /* slate-200 */
+            color: #1e293b; /* slate-800 */
+            border-color: #cbd5e1; /* slate-300 */
+        }
+        .tw-button-secondary:hover {
+            background-color: #cbd5e1; /* slate-300 */
+        }
+        .dark .tw-button-secondary {
+             background-color: #334155; /* slate-700 */
+             color: #e2e8f0; /* slate-200 */
+             border-color: #475569; /* slate-600 */
+        }
+        .dark .tw-button-secondary:hover {
+             background-color: #475569; /* slate-600 */
+        }
+
+
+        /* Card styles */
+        .card {
+            background: white;
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1); /* shadow-md */
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb; /* gray-200 */
+        }
+
+        .dark .card {
+            background: #1f2937; /* gray-800 */
+            border-color: #374151; /* gray-700 */
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Table container */
+        .table-container {
+            border-radius: 0.5rem; /* rounded-lg */
+            overflow: hidden;
+            border: 1px solid #e5e7eb; /* gray-200 */
+        }
+        .dark .table-container {
+             border-color: #374151; /* gray-700 */
+        }
+
+        /* Table styles */
+        table {
+            border-collapse: separate; /* Needed for rounded corners on container */
+            border-spacing: 0;
+            width: 100%;
+        }
+
+        th, td {
+             padding: 0.75rem 1rem; /* py-3 px-4 */
+             text-align: left;
+             border-bottom: 1px solid #e5e7eb; /* gray-200 */
+        }
+        .dark th, .dark td {
+            border-bottom-color: #374151; /* gray-700 */
+        }
+
+
+        th {
+            background-color: #f9fafb; /* gray-50 */
+            color: #6b7280; /* gray-500 */
+            font-weight: 600; /* font-semibold */
+            text-transform: uppercase;
+            font-size: 0.75rem; /* text-xs */
+            letter-spacing: 0.05em;
+        }
+
+        .dark th {
+            background-color: #1f2937; /* gray-800 */
+            color: #9ca3af; /* gray-400 */
+        }
+
+        /* Remove bottom border from last row cells */
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Modal styles */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex; /* Use flex to center content */
+            align-items: center;
+            justify-content: center;
+            z-index: 50; /* Ensure modal is on top */
+            backdrop-filter: blur(4px); /* Optional blur effect */
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); /* shadow-2xl */
+            padding: 1.5rem; /* p-6 */
+            max-width: 90%; /* Responsive width */
+            width: 500px; /* Max width */
+            max-height: 90vh; /* Max height */
+            overflow-y: auto; /* Scroll if content overflows */
+        }
+        .dark .modal-content {
+            background: #1f2937; /* gray-800 */
+        }
+
+        /* Section title underline */
+        .section-title {
+            position: relative;
+            padding-bottom: 0.75rem; /* pb-3 */
+            margin-bottom: 1.5rem; /* mb-6 */
+        }
+
+        .section-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 3rem; /* w-12 */
+            height: 3px;
+            background-color: #0d9488; /* teal-600 */
+            border-radius: 3px;
+        }
+
+        /* Badge styles */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem; /* py-1 px-3 */
+            border-radius: 9999px; /* rounded-full */
+            font-size: 0.75rem; /* text-xs */
+            font-weight: 600; /* font-semibold */
+        }
+
+        .badge-primary {
+            background-color: #ccfbf1; /* teal-100 */
+            color: #134e4a; /* teal-900 */
+        }
+
+        .dark .badge-primary {
+            background-color: #115e59; /* teal-800 */
+            color: #ccfbf1; /* teal-100 */
+        }
+
+        /* Hide inactive sections */
+        .section:not(.active) {
+            display: none;
+        }
+
+        /* Input field styles */
+        .form-input {
+            display: block;
+            width: 100%;
+            border-radius: 0.375rem; /* rounded-md */
+            border: 1px solid #d1d5db; /* gray-300 */
+            padding: 0.5rem 0.75rem; /* py-2 px-3 */
+            font-size: 0.875rem; /* text-sm */
+            box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-input:focus {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            border-color: #0d9488; /* teal-600 */
+            box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.3); /* Focus ring */
+        }
+        .dark .form-input {
+            background-color: #374151; /* gray-700 */
+            border-color: #4b5563; /* gray-600 */
+            color: #e5e7eb; /* gray-200 */
+        }
+        .dark .form-input:focus {
+             border-color: #5eead4; /* teal-300 */
+             box-shadow: 0 0 0 2px rgba(94, 234, 212, 0.4);
+        }
+
+        /* Form label styles */
+        .form-label {
+            display: block;
+            margin-bottom: 0.25rem; /* mb-1 */
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500; /* font-medium */
+            color: #374151; /* gray-700 */
+        }
+        .dark .form-label {
+            color: #d1d5db; /* gray-300 */
+        }
+
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-slate-900 text-gray-900 dark:text-slate-200">
+
+    <div class="sidebar p-5 shrink-0"> <div class="flex items-center justify-center mb-8">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-emerald-400 dark:text-emerald-300 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+            </svg>
+            <h2 class="text-2xl font-bold text-white">ChainSync Lite</h2>
+        </div>
+
+        <nav>
+            <ul>
+                <li>
+                    <a id="nav-inventory" href="#inventory" class="nav-link active">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        Inventory
+                    </a>
+                </li>
+                <li>
+                    <a id="nav-reports" href="#reports" class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Reports
+                    </a>
+                </li>
+                <li>
+                    <a id="nav-audit" href="#audit" class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Audit Log
+                    </a>
+                </li>
+                <li>
+                    <a id="nav-settings" href="#settings" class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Settings
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="mt-auto pt-4 border-t border-slate-700">
+             <button id="theme-toggle" class="w-full nav-link mb-2">
+                <svg id="theme-toggle-dark-icon" class="hidden h-5 w-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                <svg id="theme-toggle-light-icon" class="hidden h-5 w-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                <span class="ml-3">Toggle Theme</span>
+             </button>
+             <script>
+                 // Immediately set the theme icons based on initial theme
+                 const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                 const darkIcon = document.getElementById('theme-toggle-dark-icon');
+                 const lightIcon = document.getElementById('theme-toggle-light-icon');
+                 if (theme === 'dark') {
+                    darkIcon?.classList.remove('hidden');
+                 } else {
+                    lightIcon?.classList.remove('hidden');
+                 }
+                 // Add listener to update icons when theme changes via the button
+                 document.getElementById('theme-toggle')?.addEventListener('click', () => {
+                     const isDark = document.documentElement.classList.contains('dark');
+                     // The theme will be toggled *after* this click, so check the *opposite*
+                     if (!isDark) { // Will become dark
+                         darkIcon?.classList.remove('hidden');
+                         lightIcon?.classList.add('hidden');
+                     } else { // Will become light
+                         darkIcon?.classList.add('hidden');
+                         lightIcon?.classList.remove('hidden');
+                     }
+                 });
+             </script>
+
+            <div class="flex items-center p-2 rounded-md hover:bg-slate-700 transition-colors">
+                <div class="h-10 w-10 rounded-full bg-slate-600 flex items-center justify-center text-white font-medium ring-2 ring-slate-500">U</div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-white">User Account</p>
+                    <p class="text-xs text-slate-300">Owner</p>
+                </div>
+                 <button class="ml-auto text-slate-400 hover:text-white" title="Logout">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                       <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                     </svg>
+                 </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content p-4 sm:p-6 flex-1 transition-all duration-300">
+        <div class="container mx-auto max-w-7xl"> <div class="section active" id="inventory-section">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <h1 class="text-2xl font-bold section-title flex-shrink-0">Inventory Management</h1>
+                    <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+                        <span class="badge badge-primary">PRO</span>
+                        <button id="add-item-button" class="tw-button tw-button-primary flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Add Item
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="card p-4">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Items</h3>
+                        <p class="text-2xl font-semibold mt-1">185</p> </div>
+                    <div class="card p-4">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Items Low Stock</h3>
+                        <p class="text-2xl font-semibold mt-1 text-yellow-600 dark:text-yellow-400">12</p> </div>
+                     <div class="card p-4">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Out of Stock</h3>
+                        <p class="text-2xl font-semibold mt-1 text-red-600 dark:text-red-400">5</p> </div>
+                     <div class="card p-4">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Value</h3>
+                        <p class="text-2xl font-semibold mt-1">$12,345.67</p> </div>
+                </div>
+
+                <div class="card">
+                     <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                         <input type="text" placeholder="Search items..." class="form-input">
+                     </div>
+                     <div class="table-container overflow-x-auto">
+                        <table id="inventory-table" class="min-w-full">
+                            <thead>
+                                <tr>
+                                    <th class="py-3 px-4">SKU</th>
+                                    <th class="py-3 px-4">Name</th>
+                                    <th class="py-3 px-4">Category</th>
+                                    <th class="py-3 px-4 text-center">Quantity</th>
+                                    <th class="py-3 px-4">Status</th>
+                                    <th class="py-3 px-4 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150">
+                                    <td class="py-3 px-4 text-sm">SKU001</td>
+                                    <td class="py-3 px-4 font-medium">Heavy Duty Widget</td>
+                                    <td class="py-3 px-4 text-sm">Widgets</td>
+                                    <td class="py-3 px-4 text-sm text-center">150</td>
+                                    <td class="py-3 px-4 text-sm">
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-700 dark:text-emerald-100">
+                                            In Stock
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-sm text-center">
+                                        <button class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mr-2 p-1 rounded hover:bg-blue-100 dark:hover:bg-slate-700" title="Edit">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                        </button>
+                                        <button class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-100 dark:hover:bg-slate-700" title="Delete">
+                                           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        </button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                        </table>
+                    </div>
+                     <div class="p-4 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">
+                         Showing 1-10 of 185 items
+                         </div>
+                </div>
+            </div>
+
+            <div class="section hidden" id="reports-section">
+                 <h1 class="text-2xl font-bold section-title">Reports</h1>
+                 <div class="card p-6">
+                     <p>Reports section content goes here. Charts and data summaries will be displayed.</p>
+                     <div class="mt-4 h-64 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
+                         <span class="text-gray-500">Chart Area</span>
+                     </div>
+                 </div>
+            </div>
+
+            <div class="section hidden" id="audit-section">
+                 <h1 class="text-2xl font-bold section-title">Audit Log</h1>
+                 <div class="card p-6">
+                     <p>Audit log section content goes here. A table listing recent activities.</p>
+                      <div class="mt-4 border border-gray-200 dark:border-gray-700 rounded p-4">
+                         <p class="text-gray-500 dark:text-gray-400">Timestamp | User | Action | Details</p>
+                         <p class="mt-2">Apr 23, 2025 01:30 AM | User Account | Added Item | SKU: WIDG-005</p>
+                         <p class="mt-2">Apr 22, 2025 04:15 PM | User Account | Updated Quantity | SKU: GIZM-001 (-5)</p>
+                     </div>
+                 </div>
+            </div>
+
+            <div class="section hidden" id="settings-section">
+                 <h1 class="text-2xl font-bold section-title">Settings</h1>
+                 <div class="card p-6">
+                     <p>Settings section content goes here. User preferences, data import/export, etc.</p>
+                     <div class="mt-4 space-y-4">
+                         <div>
+                             <label for="companyName" class="form-label">Company Name</label>
+                             <input type="text" id="companyName" name="companyName" class="form-input" value="My Small Business">
+                         </div>
+                         <div>
+                             <label for="currency" class="form-label">Default Currency</label>
+                             <select id="currency" name="currency" class="form-input">
+                                 <option value="USD" selected>USD ($)</option>
+                                 <option value="EUR">EUR (€)</option>
+                                 <option value="GBP">GBP (£)</option>
+                             </select>
+                         </div>
+                         <div class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                             <span class="text-sm font-medium">Enable Low Stock Alerts</span>
+                             <label for="lowStockAlerts" class="relative inline-flex items-center cursor-pointer">
+                               <input type="checkbox" value="" id="lowStockAlerts" class="sr-only peer" checked>
+                               <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 dark:peer-focus:ring-teal-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-teal-600"></div>
+                             </label>
+                           </div>
+                         <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                             <button class="tw-button tw-button-primary">Save Settings</button>
+                         </div>
+                     </div>
+                 </div>
+            </div>
+
+        </div> </div> <div id="add-item-modal" class="modal-backdrop hidden"> <div class="modal-content relative dark:bg-slate-800">
+            <button id="close-modal" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h2 class="text-xl font-semibold mb-4">Add New Inventory Item</h2>
+            <form id="add-item-form">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="item-sku" class="form-label">SKU / Item Code</label>
+                        <input type="text" id="item-sku" name="sku" class="form-input" required>
+                    </div>
+                    <div>
+                        <label for="item-name" class="form-label">Item Name</label>
+                        <input type="text" id="item-name" name="name" class="form-input" required>
+                    </div>
+                </div>
+                 <div class="mb-4">
+                    <label for="item-category" class="form-label">Category</label>
+                    <input type="text" id="item-category" name="category" class="form-input">
+                 </div>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                     <div>
+                        <label for="item-quantity" class="form-label">Initial Quantity</label>
+                        <input type="number" id="item-quantity" name="quantity" class="form-input" value="0" min="0" required>
+                     </div>
+                     <div>
+                        <label for="item-cost" class="form-label">Unit Cost (Optional)</label>
+                        <input type="number" id="item-cost" name="cost" class="form-input" step="0.01" min="0">
+                     </div>
+                 </div>
+                 <div class="mb-4">
+                    <label for="item-notes" class="form-label">Notes (Optional)</label>
+                    <textarea id="item-notes" name="notes" rows="3" class="form-input"></textarea>
+                 </div>
+                 <div class="flex justify-end space-x-3 mt-6">
+                     <button type="button" class="tw-button tw-button-secondary" onclick="document.getElementById('add-item-modal').classList.add('hidden')">Cancel</button>
+                     <button type="submit" class="tw-button tw-button-primary">Add Item</button>
+                 </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        // Paste the entire content of the 'Service Worker Registration (app.js / inline script)' immersive here
+        // Including the service worker registration, theme handling, navigation, modal logic, etc.
+
+        // --- Start of pasted content ---
+
+        // Check if the browser supports service workers
+        if ('serviceWorker' in navigator) {
+          // Register the service worker after the page has loaded
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js') // Path to your service worker file
+              .then(registration => {
+                console.log('Service Worker registered successfully with scope:', registration.scope);
+
+                // --- Optional: Listen for updates ---
+                registration.addEventListener('updatefound', () => {
+                  // A new service worker is installing.
+                  const installingWorker = registration.installing;
+                  console.log('A new service worker is installing:', installingWorker);
+
+                  installingWorker.addEventListener('statechange', () => {
+                    if (installingWorker.state === 'installed') {
+                      if (navigator.serviceWorker.controller) {
+                        console.log('New content is available; please refresh.');
+                        // Example: showRefreshUI(registration); // Defined below if needed
+                      } else {
+                        console.log('Content is cached for offline use.');
+                      }
+                    }
+                  });
+                });
+
+              })
+              .catch(error => {
+                console.error('Service Worker registration failed:', error);
+              });
+          });
+
+          // --- Optional: Detect controller change ---
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            console.log('Controller changed. Page may be using a new service worker.');
+            // window.location.reload(); // Uncomment to force reload on controller change
+          });
+
+        } else {
+          console.log('Service Workers are not supported in this browser.');
+        }
+
+        // --- Optional: UI function to prompt for refresh ---
+        /*
+        function showRefreshUI(registration) {
+          const refreshButton = document.createElement('button');
+          // Add styling as needed...
+          refreshButton.textContent = 'New version available. Refresh?';
+          refreshButton.addEventListener('click', () => {
+            if (!registration.waiting) return;
+            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+            refreshButton.remove();
+          });
+          document.body.appendChild(refreshButton);
+        }
+        // Remember to add the message listener in sw.js if using this
+        */
+
+        // --- Application Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.main-content .section');
+            const themeToggleButton = document.getElementById('theme-toggle');
+            const addItemButton = document.getElementById('add-item-button'); // Corrected ID
+            const modal = document.getElementById('add-item-modal');
+            const closeModalButton = document.getElementById('close-modal');
+            const addItemForm = document.getElementById('add-item-form');
+
+            // Function to switch sections
+            function showSection(targetId) {
+                sections.forEach(section => {
+                    if (!section) return; // Guard against null sections
+                    if (section.id === targetId + '-section') {
+                        section.classList.add('active');
+                        section.classList.remove('hidden');
+                    } else {
+                        section.classList.remove('active');
+                        section.classList.add('hidden');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                     if (!link) return; // Guard against null links
+                    if (link.id === 'nav-' + targetId) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+                localStorage.setItem('activeSection', targetId);
+            }
+
+            // Navigation click handling
+            navLinks.forEach(link => {
+                if (!link) return;
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const href = link.getAttribute('href');
+                    if (!href || href === '#') return; // Prevent errors on invalid href
+                    const targetId = href.substring(1);
+                    showSection(targetId);
+                });
+            });
+
+            // Restore last active section on page load
+            const lastActiveSection = localStorage.getItem('activeSection');
+            // Default to inventory if nothing is stored or the stored value is invalid
+            const validSections = ['inventory', 'reports', 'audit', 'settings'];
+            const sectionToShow = (lastActiveSection && validSections.includes(lastActiveSection)) ? lastActiveSection : 'inventory';
+
+            // Ensure the default active classes are handled correctly before applying the stored one
+            document.querySelector('.nav-link.active')?.classList.remove('active');
+            document.querySelector('.main-content .section.active')?.classList.remove('active');
+            // Hide all sections initially, then show the correct one
+            sections.forEach(s => s?.classList.add('hidden'));
+            showSection(sectionToShow);
+
+
+            // --- Dark Mode Toggle ---
+            const applyTheme = (theme) => {
+                const darkIcon = document.getElementById('theme-toggle-dark-icon');
+                const lightIcon = document.getElementById('theme-toggle-light-icon');
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    document.body.classList.add('dark');
+                    darkIcon?.classList.remove('hidden');
+                    lightIcon?.classList.add('hidden');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.body.classList.remove('dark');
+                    darkIcon?.classList.add('hidden');
+                    lightIcon?.classList.remove('hidden');
+                }
+                localStorage.setItem('theme', theme);
+            };
+
+            // Check for saved theme preference or use system preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const initialTheme = savedTheme ? savedTheme : (prefersDark ? 'dark' : 'light');
+            applyTheme(initialTheme); // Apply theme immediately
+
+            // Add theme toggle button listener
+            if (themeToggleButton) {
+                themeToggleButton.addEventListener('click', () => {
+                    const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+                    applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+                });
+            } else {
+                 console.warn("Theme toggle button not found");
+            }
+
+            // --- Modal Handling ---
+            if (addItemButton && modal && closeModalButton) {
+                addItemButton.addEventListener('click', () => {
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                });
+
+                closeModalButton.addEventListener('click', () => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                });
+
+                modal.addEventListener('click', (event) => {
+                    if (event.target === modal) {
+                        modal.classList.add('hidden');
+                        modal.classList.remove('flex');
+                    }
+                });
+            } else {
+                console.warn("Modal elements (button, modal, close button) not all found.");
+            }
+
+            // --- Add Item Form Submission ---
+            if (addItemForm) {
+                addItemForm.addEventListener('submit', (e) => {
+                    e.preventDefault(); // Prevent default form submission
+                    const formData = new FormData(addItemForm);
+                    const newItem = Object.fromEntries(formData.entries());
+                    console.log('New Item Data:', newItem);
+                    // TODO: Add logic to save the item (e.g., to IndexedDB)
+                    // TODO: Update the inventory table display
+                    // TODO: Add user feedback (e.g., success message)
+
+                    // Close the modal and reset the form
+                    modal?.classList.add('hidden');
+                    modal?.classList.remove('flex');
+                    addItemForm.reset();
+                });
+            }
+
+            // --- Initial Data Loading ---
+            if (sectionToShow === 'inventory') {
+                loadInventoryData();
+            } else if (sectionToShow === 'reports') {
+                 loadReportData();
+            } else if (sectionToShow === 'audit') {
+                 loadAuditLog();
+            }
+            // Settings section doesn't typically need initial data load in the same way
+
+        }); // End DOMContentLoaded
+
+        // --- Data Loading Functions ---
+        function loadInventoryData() {
+            console.log("Load Inventory Data");
+            const tableBody = document.querySelector('#inventory-table tbody');
+            if (!tableBody) {
+                 console.error("Inventory table body not found!");
+                 return;
+            }
+            tableBody.innerHTML = ''; // Clear existing rows
+
+            // Sample data (replace with actual data source like IndexedDB)
+            const items = [
+                { id: 'SKU001', name: 'Heavy Duty Widget', category: 'Widgets', quantity: 150, status: 'In Stock' },
+                { id: 'SKU002', name: 'Standard Gizmo', category: 'Gizmos', quantity: 0, status: 'Out of Stock' },
+                { id: 'SKU003', name: 'Premium Thingamajig', category: 'Thingamajigs', quantity: 35, status: 'Low Stock' },
+                { id: 'SKU004', name: 'Basic Doodad', category: 'Doodads', quantity: 200, status: 'In Stock' },
+                { id: 'SKU005', name: 'Advanced Sprocket', category: 'Sprockets', quantity: 5, status: 'Low Stock' },
+            ];
+
+            if (items.length === 0) {
+                 const row = tableBody.insertRow();
+                 row.className = 'text-center';
+                 const cell = row.insertCell();
+                 cell.colSpan = 6; // Span all columns
+                 cell.className = 'py-6 px-4 text-gray-500 dark:text-gray-400';
+                 cell.textContent = 'No inventory items found.';
+                 return;
+            }
+
+            items.forEach(item => {
+                const row = tableBody.insertRow();
+                row.className = 'border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors duration-150';
+
+                let statusClass = '';
+                if (item.quantity <= 0) {
+                    item.status = 'Out of Stock';
+                    statusClass = 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100';
+                } else if (item.quantity <= 50) { // Example threshold for low stock
+                     item.status = 'Low Stock';
+                     statusClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100';
+                } else {
+                     item.status = 'In Stock';
+                     statusClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-700 dark:text-emerald-100';
+                }
+
+
+                row.innerHTML = `
+                    <td class="py-3 px-4 text-sm whitespace-nowrap">${item.id}</td>
+                    <td class="py-3 px-4 font-medium whitespace-nowrap">${item.name}</td>
+                    <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">${item.category || '-'}</td>
+                    <td class="py-3 px-4 text-sm text-center">${item.quantity}</td>
+                    <td class="py-3 px-4 text-sm">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">
+                            ${item.status}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-sm text-center whitespace-nowrap">
+                        <button class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mr-2 p-1 rounded hover:bg-blue-100 dark:hover:bg-slate-700" title="Edit">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                        </button>
+                        <button class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-100 dark:hover:bg-slate-700" title="Delete">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                    </td>
+                `;
+            });
+        }
+
+        function loadReportData() { console.log("Load Report Data - Placeholder"); }
+        function loadAuditLog() { console.log("Load Audit Log - Placeholder"); }
+
+        // --- End of pasted content ---
+    </script>
+
+</body>
+</html>
