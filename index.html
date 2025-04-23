@@ -88,10 +88,16 @@
              border-radius: 0.375rem; /* rounded-md */
              font-size: 0.875rem; /* text-sm */
              font-weight: 500; /* font-medium */
-             transition: background-color 0.2s, opacity 0.2s; /* Added opacity transition */
+             transition: background-color 0.2s, opacity 0.2s, box-shadow 0.2s; /* Added box-shadow transition */
              cursor: pointer;
              border: 1px solid transparent; /* Base border */
+             /* Focus state */
+             outline: none;
         }
+        .tw-button:focus-visible { /* Use focus-visible for accessibility */
+             box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.4); /* Teal focus ring */
+        }
+
         /* Disabled state for buttons */
         .tw-button:disabled {
             opacity: 0.6;
@@ -124,6 +130,9 @@
         .dark .tw-button-secondary:hover:not(:disabled) {
              background-color: #475569; /* slate-600 */
         }
+        .dark .tw-button:focus-visible { /* Dark mode focus ring */
+             box-shadow: 0 0 0 3px rgba(94, 234, 212, 0.5); /* Lighter teal focus ring */
+        }
 
 
         /* Card styles */
@@ -145,11 +154,11 @@
         .table-container {
             border-radius: 0.5rem; /* rounded-lg */
             overflow: hidden;
-            border: 1px solid #e5e7eb; /* gray-200 */
+            /* Removed border here, apply to card instead */
         }
-        .dark .table-container {
-             border-color: #374151; /* gray-700 */
-        }
+        /* .dark .table-container { */
+             /* border-color: #374151; /* gray-700 */ */
+        /* } */
 
         /* Table styles */
         table {
@@ -175,12 +184,38 @@
             text-transform: uppercase;
             font-size: 0.75rem; /* text-xs */
             letter-spacing: 0.05em;
+             border-bottom-width: 2px; /* Thicker bottom border for header */
+             border-color: #e5e7eb; /* gray-200 */
         }
 
         .dark th {
             background-color: #1f2937; /* gray-800 */
             color: #9ca3af; /* gray-400 */
+             border-color: #374151; /* gray-700 */
         }
+
+        /* Zebra striping for table rows */
+        tbody tr:nth-child(odd) {
+            background-color: white;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f9fafb; /* gray-50 */
+        }
+        .dark tbody tr:nth-child(odd) {
+            background-color: #1f2937; /* gray-800 */
+        }
+        .dark tbody tr:nth-child(even) {
+            background-color: #273344; /* Slightly darker gray */
+        }
+
+        /* Table row hover effect */
+        tbody tr:not(.table-state-message):hover {
+             background-color: #f0f9ff; /* light blue-50 */
+        }
+         .dark tbody tr:not(.table-state-message):hover {
+             background-color: #374151; /* gray-700 */
+        }
+
 
         /* Remove bottom border from last row cells */
         tr:last-child td {
@@ -291,6 +326,13 @@
         .dark .form-input:read-only {
             background-color: #4b5563; /* gray-600 */
         }
+        /* Input error state */
+        .form-input.border-red-500 {
+            border-color: #ef4444; /* red-500 */
+        }
+        .form-input.border-red-500:focus {
+             box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.4); /* Red focus ring */
+        }
 
 
         /* Form label styles */
@@ -314,6 +356,41 @@
         .dark .table-state-message td {
              color: #9ca3af; /* gray-400 */
         }
+        /* Add flex display for icon + text */
+        .table-state-message td > div {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem; /* space-y-2 */
+        }
+        .table-state-message svg {
+             width: 2rem; /* h-8 */
+             height: 2rem; /* w-8 */
+             color: #9ca3af; /* gray-400 */
+        }
+        .dark .table-state-message svg {
+             color: #6b7280; /* gray-500 */
+        }
+
+        /* Spinner animation */
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        .spinner {
+          display: inline-block;
+          width: 1.5rem; /* h-6 */
+          height: 1.5rem; /* w-6 */
+          border: 3px solid rgba(13, 148, 136, 0.3); /* teal-600 border with opacity */
+          border-radius: 50%;
+          border-top-color: #0d9488; /* teal-600 */
+          animation: spin 1s ease-in-out infinite;
+        }
+        .dark .spinner {
+           border: 3px solid rgba(94, 234, 212, 0.3); /* teal-300 border with opacity */
+           border-top-color: #5eead4; /* teal-300 */
+        }
+
 
         /* Simple Notification styling */
         #notification-area {
@@ -335,6 +412,14 @@
             opacity: 0;
             transform: translateX(100%);
             transition: opacity 0.3s ease, transform 0.3s ease;
+            display: flex; /* For icon alignment */
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .notification svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            flex-shrink: 0;
         }
         .notification.show {
              opacity: 1;
@@ -347,11 +432,10 @@
         /* Chart container styles */
         .chart-container {
             position: relative;
-            /* Adjust height as needed, make it responsive */
             height: 300px;
             width: 100%;
-            max-width: 500px; /* Limit max width for larger screens */
-            margin: auto; /* Center chart */
+            max-width: 500px;
+            margin: auto;
         }
         @media (min-width: 1024px) { /* lg breakpoint */
              .chart-container {
@@ -483,7 +567,7 @@
 
                 <div class="card">
                      <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-                         <input type="text" placeholder="Search items..." class="form-input" id="inventory-search">
+                         <input type="text" placeholder="Search items by SKU, Name, or Category..." class="form-input" id="inventory-search">
                      </div>
                      <div class="table-container overflow-x-auto">
                         <table id="inventory-table" class="min-w-full">
@@ -499,10 +583,22 @@
                             </thead>
                             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                                 <tr class="table-state-message" id="inventory-loading">
-                                    <td colspan="6">Loading inventory...</td>
+                                    <td colspan="6">
+                                        <div>
+                                            <div class="spinner"></div>
+                                            <span>Loading inventory...</span>
+                                        </div>
+                                    </td>
                                 </tr>
                                 <tr class="table-state-message hidden" id="inventory-empty">
-                                     <td colspan="6">No inventory items found. Add one to get started!</td>
+                                     <td colspan="6">
+                                        <div>
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                                            </svg>
+                                            <span>No inventory items found. Add one to get started!</span>
+                                        </div>
+                                     </td>
                                 </tr>
                                 </tbody>
                         </table>
@@ -553,9 +649,23 @@
                              </thead>
                              <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                                  <tr class="table-state-message" id="audit-log-loading">
-                                     <td colspan="3">Loading audit log...</td> </tr>
+                                     <td colspan="3">
+                                        <div>
+                                            <div class="spinner"></div>
+                                            <span>Loading audit log...</span>
+                                        </div>
+                                     </td>
+                                 </tr>
                                  <tr class="table-state-message hidden" id="audit-log-empty">
-                                      <td colspan="3">No audit log entries found.</td> </tr>
+                                      <td colspan="3">
+                                         <div>
+                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                               <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 18v-7.875c0-.621.504-1.125 1.125-1.125H9.75" />
+                                             </svg>
+                                             <span>No audit log entries found.</span>
+                                         </div>
+                                      </td>
+                                 </tr>
                                  </tbody>
                          </table>
                      </div>
@@ -589,7 +699,12 @@
                              </label>
                            </div>
                          <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                             <button id="save-settings-button" class="tw-button tw-button-primary">Save Settings</button>
+                             <button id="save-settings-button" class="tw-button tw-button-primary flex items-center">
+                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                   <path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                                 </svg>
+                                 Save Settings
+                             </button>
                          </div>
                      </div>
                  </div>
@@ -746,7 +861,7 @@
         function loadActiveSection() { const sections = document.querySelectorAll('.main-content .section'); const navLinks = document.querySelectorAll('.nav-link'); const lastActiveSection = localStorage.getItem('activeSection'); const validSections = ['inventory', 'reports', 'audit', 'settings']; const sectionToShow = (lastActiveSection && validSections.includes(lastActiveSection)) ? lastActiveSection : 'inventory'; sections.forEach(s => s?.classList.add('hidden')); navLinks.forEach(l => l?.classList.remove('active')); showSection(sectionToShow, sections, navLinks); }
         function setupThemeToggle(themeToggleButton) { const applyTheme = (theme) => { const darkIcon = document.getElementById('theme-toggle-dark-icon'); const lightIcon = document.getElementById('theme-toggle-light-icon'); if (theme === 'dark') { document.documentElement.classList.add('dark'); document.body.classList.add('dark'); darkIcon?.classList.remove('hidden'); lightIcon?.classList.add('hidden'); } else { document.documentElement.classList.remove('dark'); document.body.classList.remove('dark'); darkIcon?.classList.add('hidden'); lightIcon?.classList.remove('hidden'); } localStorage.setItem('theme', theme); }; const savedTheme = localStorage.getItem('theme'); const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches; const initialTheme = savedTheme ? savedTheme : (prefersDark ? 'dark' : 'light'); applyTheme(initialTheme); if (themeToggleButton) { themeToggleButton.addEventListener('click', () => { const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'; applyTheme(currentTheme === 'dark' ? 'light' : 'dark'); }); } else { console.warn("Theme toggle button not found"); } }
         function setupModal(addItemButton, modal, closeModalButton, cancelItemModalButton, itemForm) { const modalTitle = document.getElementById('modal-title'); const submitButton = document.getElementById('modal-submit-button'); const skuInput = document.getElementById('item-sku'); const openModalForAdd = () => { itemForm.dataset.mode = 'add'; itemForm.reset(); clearFormErrors(itemForm); modalTitle.textContent = 'Add New Inventory Item'; submitButton.textContent = 'Add Item'; skuInput.readOnly = false; skuInput.classList.remove('form-input:read-only', 'dark:form-input:read-only'); modal.classList.remove('hidden'); modal.classList.add('flex'); skuInput.focus(); }; const closeModal = () => { modal.classList.add('hidden'); modal.classList.remove('flex'); itemForm.reset(); clearFormErrors(itemForm); itemForm.dataset.mode = 'add'; modalTitle.textContent = 'Add New Inventory Item'; submitButton.textContent = 'Add Item'; skuInput.readOnly = false; skuInput.classList.remove('form-input:read-only', 'dark:form-input:read-only'); }; if (addItemButton && modal && closeModalButton && cancelItemModalButton && itemForm && modalTitle && submitButton && skuInput) { addItemButton.addEventListener('click', openModalForAdd); closeModalButton.addEventListener('click', closeModal); cancelItemModalButton.addEventListener('click', closeModal); modal.addEventListener('click', (event) => { if (event.target === modal) { closeModal(); } }); itemForm.addEventListener('submit', handleItemFormSubmit); } else { console.warn("Modal elements not all found."); } }
-        function clearFormErrors(form) { form.querySelectorAll('.text-red-500').forEach(el => el.classList.add('hidden')); form.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500')); form.querySelectorAll('input[aria-invalid="true"]').forEach(el => el.removeAttribute('aria-invalid')); }
+        function clearFormErrors(form) { form.querySelectorAll('.text-red-500').forEach(el => el.classList.add('hidden')); form.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500')); form.querySelectorAll('input[aria-invalid="true"], textarea[aria-invalid="true"]').forEach(el => el.removeAttribute('aria-invalid')); } // Include textarea
         function displayFormError(fieldId, message) { const errorEl = document.getElementById(`${fieldId}-error`); const inputEl = document.getElementById(`item-${fieldId}`); if (errorEl) { errorEl.textContent = message; errorEl.classList.remove('hidden'); } if (inputEl) { inputEl.classList.add('border-red-500'); inputEl.setAttribute('aria-invalid', 'true'); } }
 
         /** Handles both Add and Edit item form submissions */
@@ -773,7 +888,7 @@
 
         // --- Data Loading & Display (Inventory) ---
         async function loadInventoryData(searchTerm = '') { const tableBody = document.querySelector('#inventory-table tbody'); const loadingRow = document.getElementById('inventory-loading'); const emptyRow = document.getElementById('inventory-empty'); const footerInfo = document.getElementById('inventory-footer'); if (!tableBody || !loadingRow || !emptyRow || !footerInfo) { console.error("Inventory table elements not found!"); return; } loadingRow.classList.remove('hidden'); emptyRow.classList.add('hidden'); tableBody.querySelectorAll('tr:not(#inventory-loading):not(#inventory-empty)').forEach(row => row.remove()); footerInfo.classList.add('hidden'); try { let items = await getAllItemsFromDB(); if (searchTerm) { const lowerSearchTerm = searchTerm.toLowerCase(); items = items.filter(item => item.id.toLowerCase().includes(lowerSearchTerm) || item.name.toLowerCase().includes(lowerSearchTerm) || item.category.toLowerCase().includes(lowerSearchTerm)); } loadingRow.classList.add('hidden'); if (items.length === 0) { emptyRow.classList.remove('hidden'); updateSummaryCards([]); updateInventoryFooter(0, 0, 0); } else { emptyRow.classList.add('hidden'); items.sort((a, b) => a.id.localeCompare(b.id)); items.forEach(item => renderInventoryRow(item, tableBody)); updateSummaryCards(items); updateInventoryFooter(1, items.length, items.length); } footerInfo.classList.remove('hidden'); } catch (error) { console.error("Error loading inventory data:", error); loadingRow.querySelector('td').textContent = 'Error loading inventory.'; emptyRow.classList.add('hidden'); updateSummaryCards([]); updateInventoryFooter(0, 0, 0); footerInfo.classList.remove('hidden'); showNotification('Error loading inventory data.', 'error'); } }
-        function renderInventoryRow(item, tableBody) { const row = tableBody.insertRow(); row.className = 'border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors duration-150'; row.dataset.itemId = item.id; let statusClass = ''; let statusText = ''; const lowStockThreshold = 10; if (item.quantity <= 0) { statusText = 'Out of Stock'; statusClass = 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100'; } else if (item.quantity <= lowStockThreshold) { statusText = 'Low Stock'; statusClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100'; } else { statusText = 'In Stock'; statusClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-700 dark:text-emerald-100'; } row.innerHTML = `<td class="py-3 px-4 text-sm whitespace-nowrap">${item.id}</td> <td class="py-3 px-4 font-medium whitespace-nowrap">${item.name}</td> <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">${item.category || '-'}</td> <td class="py-3 px-4 text-sm text-center">${item.quantity}</td> <td class="py-3 px-4 text-sm"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${statusText}</span></td> <td class="py-3 px-4 text-sm text-center whitespace-nowrap"><button class="edit-item-btn text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mr-2 p-1 rounded hover:bg-blue-100 dark:hover:bg-slate-700" title="Edit" data-id="${item.id}"><svg class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button><button class="delete-item-btn text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-100 dark:hover:bg-slate-700" title="Delete" data-id="${item.id}" data-name="${item.name}"><svg class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button></td>`; row.querySelector('.edit-item-btn')?.addEventListener('click', handleEditItem); row.querySelector('.delete-item-btn')?.addEventListener('click', handleDeleteItem); }
+        function renderInventoryRow(item, tableBody) { const row = tableBody.insertRow(); row.className = 'border-b border-gray-200 dark:border-gray-700 transition-colors duration-150'; row.dataset.itemId = item.id; let statusClass = ''; let statusText = ''; const lowStockThreshold = 10; if (item.quantity <= 0) { statusText = 'Out of Stock'; statusClass = 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100'; } else if (item.quantity <= lowStockThreshold) { statusText = 'Low Stock'; statusClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100'; } else { statusText = 'In Stock'; statusClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-700 dark:text-emerald-100'; } row.innerHTML = `<td class="py-3 px-4 text-sm whitespace-nowrap">${item.id}</td> <td class="py-3 px-4 font-medium whitespace-nowrap">${item.name}</td> <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">${item.category || '-'}</td> <td class="py-3 px-4 text-sm text-center">${item.quantity}</td> <td class="py-3 px-4 text-sm"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${statusText}</span></td> <td class="py-3 px-4 text-sm text-center whitespace-nowrap"><button class="edit-item-btn text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mr-2 p-1 rounded hover:bg-blue-100 dark:hover:bg-slate-700" title="Edit" data-id="${item.id}"><svg class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button><button class="delete-item-btn text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded hover:bg-red-100 dark:hover:bg-slate-700" title="Delete" data-id="${item.id}" data-name="${item.name}"><svg class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button></td>`; row.querySelector('.edit-item-btn')?.addEventListener('click', handleEditItem); row.querySelector('.delete-item-btn')?.addEventListener('click', handleDeleteItem); }
         function updateSummaryCards(items) { const totalItemsEl = document.getElementById('summary-total-items'); const lowStockEl = document.getElementById('summary-low-stock'); const outOfStockEl = document.getElementById('summary-out-of-stock'); const totalValueEl = document.getElementById('summary-total-value'); if (!totalItemsEl || !lowStockEl || !outOfStockEl || !totalValueEl) return; const lowStockThreshold = 10; let lowStockCount = 0; let outOfStockCount = 0; let totalValue = 0; items.forEach(item => { if (item.quantity <= 0) { outOfStockCount++; } else if (item.quantity <= lowStockThreshold) { lowStockCount++; } if (item.cost && item.quantity > 0) { totalValue += item.cost * item.quantity; } }); totalItemsEl.textContent = items.length; lowStockEl.textContent = lowStockCount; outOfStockEl.textContent = outOfStockCount; const currencySymbol = localStorage.getItem('setting_currency') || '$'; totalValueEl.textContent = `${currencySymbol}${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`; }
         function updateInventoryFooter(start, end, total) { const startEl = document.getElementById('item-count-start'); const endEl = document.getElementById('item-count-end'); const totalEl = document.getElementById('item-count-total'); if (startEl && endEl && totalEl) { startEl.textContent = total > 0 ? start : 0; endEl.textContent = end; totalEl.textContent = total; } }
         function setupInventorySearch() { const searchInput = document.getElementById('inventory-search'); if (searchInput) { let debounceTimer; searchInput.addEventListener('input', (e) => { clearTimeout(debounceTimer); const searchTerm = e.target.value; debounceTimer = setTimeout(() => { loadInventoryData(searchTerm); }, 300); }); } }
@@ -783,11 +898,24 @@
         async function handleDeleteItem(event) { const button = event.currentTarget; const itemId = button.dataset.id; const itemName = button.dataset.name || 'this item'; console.log("Delete item clicked:", itemId); if (confirm(`Are you sure you want to delete "${itemName}" (SKU: ${itemId})? This action cannot be undone.`)) { console.log(`Proceeding with deletion of ${itemId}`); button.disabled = true; try { await deleteItemFromDB(itemId); await addAuditLogEntry('DELETE_ITEM', `SKU: ${itemId}, Name: ${itemName}`); showNotification(`Item '${itemName}' deleted.`, 'success'); await loadInventoryData(document.getElementById('inventory-search')?.value || ''); } catch (error) { console.error(`Failed to delete item ${itemId}:`, error); showNotification(`Error deleting item: ${error}`, 'error'); button.disabled = false; } } else { console.log(`Deletion cancelled for ${itemId}`); } }
 
         // --- Notification System ---
-        function showNotification(message, type = 'info', duration = 3000) { const notificationArea = document.getElementById('notification-area'); if (!notificationArea) return; const notification = document.createElement('div'); notification.className = `notification ${type}`; notification.textContent = message; notificationArea.appendChild(notification); requestAnimationFrame(() => { notification.classList.add('show'); }); setTimeout(() => { notification.classList.remove('show'); notification.addEventListener('transitionend', () => { notification.remove(); }, { once: true }); }, duration); }
+        function showNotification(message, type = 'info', duration = 3000) {
+            const notificationArea = document.getElementById('notification-area'); if (!notificationArea) return;
+            const notification = document.createElement('div');
+            let iconSvg = '';
+            if (type === 'success') { iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>`; }
+            else if (type === 'error') { iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>`; }
+            else { iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>`; }
+
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `${iconSvg}<span>${message}</span>`; // Add icon + message
+
+            notificationArea.appendChild(notification); requestAnimationFrame(() => { notification.classList.add('show'); });
+            setTimeout(() => { notification.classList.remove('show'); notification.addEventListener('transitionend', () => { notification.remove(); }, { once: true }); }, duration);
+        }
 
         // --- Audit Log Functions ---
         async function loadAuditLog() { console.log("Loading audit log data..."); const tableBody = document.querySelector('#audit-log-table tbody'); const loadingRow = document.getElementById('audit-log-loading'); const emptyRow = document.getElementById('audit-log-empty'); if (!tableBody || !loadingRow || !emptyRow) { console.error("Audit log table elements not found!"); return; } loadingRow.classList.remove('hidden'); emptyRow.classList.add('hidden'); tableBody.querySelectorAll('tr:not(#audit-log-loading):not(#audit-log-empty)').forEach(row => row.remove()); try { const logs = await getAllAuditLogsFromDB(); loadingRow.classList.add('hidden'); if (logs.length === 0) { emptyRow.classList.remove('hidden'); } else { emptyRow.classList.add('hidden'); logs.forEach(log => renderAuditLogRow(log, tableBody)); } } catch (error) { console.error("Error loading audit log data:", error); loadingRow.querySelector('td').textContent = 'Error loading audit log.'; emptyRow.classList.add('hidden'); showNotification('Error loading audit log.', 'error'); } }
-        function renderAuditLogRow(log, tableBody) { const row = tableBody.insertRow(); row.className = 'border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors duration-150'; const timestamp = new Date(log.timestamp); const formattedTimestamp = timestamp.toLocaleString(); row.innerHTML = `<td class="py-3 px-4 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">${formattedTimestamp}</td><td class="py-3 px-4 text-sm font-medium">${log.action.replace('_', ' ')}</td> <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">${log.details}</td>`; }
+        function renderAuditLogRow(log, tableBody) { const row = tableBody.insertRow(); row.className = 'border-b border-gray-200 dark:border-gray-700 transition-colors duration-150'; const timestamp = new Date(log.timestamp); const formattedTimestamp = timestamp.toLocaleString(); row.innerHTML = `<td class="py-3 px-4 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">${formattedTimestamp}</td><td class="py-3 px-4 text-sm font-medium">${log.action.replace('_', ' ')}</td> <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">${log.details}</td>`; }
 
         // --- Settings Functions ---
         function setupSettings(saveButton) { if (saveButton) { saveButton.addEventListener('click', saveSettings); } else { console.warn("Save settings button not found."); } }
@@ -799,7 +927,7 @@
             const lowStockToggle = document.getElementById('setting-low-stock-alerts');
             const saveButton = document.getElementById('save-settings-button');
             saveButton.disabled = true;
-            saveButton.textContent = 'Saving...';
+            saveButton.innerHTML = `<svg class="spinner h-4 w-4 mr-2" viewBox="0 0 24 24"></svg>Saving...`; // Show spinner
             try {
                 const companyName = companyNameInput.value.trim();
                 const currency = currencySelect.value;
@@ -809,16 +937,17 @@
                 localStorage.setItem('setting_lowStockAlerts', lowStockAlerts);
                 console.log("Settings saved:", { companyName, currency, lowStockAlerts });
                 showNotification('Settings saved.', 'success');
-                // Update summary cards immediately if needed (requires fetching items)
-                // Since summary cards load with inventory, maybe just let it update on next inventory view?
-                // Or fetch items here:
-                // getAllItemsFromDB().then(items => updateSummaryCards(items)).catch(err => console.error("Error updating summary after settings save:", err));
+                // Trigger summary update after a short delay to allow save
+                setTimeout(() => {
+                     getAllItemsFromDB().then(items => updateSummaryCards(items)).catch(err => console.error("Error updating summary after settings save:", err));
+                }, 100);
             } catch (error) {
                 console.error("Error saving settings:", error);
                 showNotification('Failed to save settings.', 'error');
             } finally {
                  saveButton.disabled = false;
-                 saveButton.textContent = 'Save Settings';
+                 // Restore original button content
+                 saveButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>Save Settings`;
             }
         }
 
@@ -831,9 +960,18 @@
             const categoryCtx = document.getElementById('categoryChart')?.getContext('2d');
 
             if (!stockStatusCtx || !categoryCtx || !noDataMessage || !chartsGrid) {
-                console.error("Report canvas elements or containers not found!");
-                return;
+                console.error("Report canvas elements or containers not found!"); return;
             }
+
+            // --- Determine Chart Colors based on Theme ---
+            const isDarkMode = document.documentElement.classList.contains('dark');
+            const chartTextColor = isDarkMode ? 'rgba(226, 232, 240, 0.8)' : 'rgba(55, 65, 81, 0.9)'; // slate-200 / gray-700
+            const chartGridColor = isDarkMode ? 'rgba(71, 85, 105, 0.3)' : 'rgba(229, 231, 235, 0.5)'; // slate-600 / gray-200
+
+            // --- Set Chart.js Defaults for Dark Mode ---
+             Chart.defaults.color = chartTextColor;
+             Chart.defaults.borderColor = chartGridColor;
+
 
             try {
                 const items = await getAllItemsFromDB();
@@ -863,8 +1001,8 @@
                 console.log("Creating stock status chart...");
                 stockStatusChartInstance = new Chart(stockStatusCtx, {
                     type: 'doughnut',
-                    data: { labels: ['In Stock', 'Low Stock', 'Out of Stock'], datasets: [{ label: 'Stock Status', data: [inStockCount, lowStockCount, outOfStockCount], backgroundColor: ['rgba(16, 185, 129, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(239, 68, 68, 0.7)'], borderColor: ['rgba(16, 185, 129, 1)', 'rgba(245, 158, 11, 1)', 'rgba(239, 68, 68, 1)'], borderWidth: 1 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', }, tooltip: { callbacks: { label: function(context) { let label = context.label || ''; if (label) { label += ': '; } if (context.parsed !== null) { label += context.parsed; } return label; } } } } }
+                    data: { labels: ['In Stock', 'Low Stock', 'Out of Stock'], datasets: [{ label: 'Stock Status', data: [inStockCount, lowStockCount, outOfStockCount], backgroundColor: ['rgba(16, 185, 129, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(239, 68, 68, 0.7)'], borderColor: [isDarkMode ? '#1f2937' : '#ffffff'], borderWidth: 2 }] }, // Use background color for border separation
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: chartTextColor } }, tooltip: { bodyColor: chartTextColor, titleColor: chartTextColor } } }
                 });
 
                 // Create Category Chart
@@ -873,7 +1011,7 @@
                 categoryChartInstance = new Chart(categoryCtx, {
                     type: 'bar',
                     data: { labels: categoryLabels, datasets: [{ label: 'Items per Category', data: categoryData, backgroundColor: 'rgba(13, 148, 136, 0.6)', borderColor: 'rgba(13, 148, 136, 1)', borderWidth: 1 }] },
-                    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+                    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { stepSize: 1, color: chartTextColor }, grid: { color: chartGridColor } }, y: { ticks: { color: chartTextColor }, grid: { color: chartGridColor } } }, plugins: { legend: { display: false }, tooltip: { bodyColor: chartTextColor, titleColor: chartTextColor } } }
                 });
 
             } catch (error) {
