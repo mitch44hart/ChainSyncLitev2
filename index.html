@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#0d9488">
     <title>ChainSync Lite - Professional Inventory Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <style>
         /* Inter Font */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -343,6 +344,21 @@
         .notification.error { background-color: #ef4444; /* red-500 */ }
         .notification.info { background-color: #3b82f6; /* blue-500 */ }
 
+        /* Chart container styles */
+        .chart-container {
+            position: relative;
+            /* Adjust height as needed, make it responsive */
+            height: 300px;
+            width: 100%;
+            max-width: 500px; /* Limit max width for larger screens */
+            margin: auto; /* Center chart */
+        }
+        @media (min-width: 1024px) { /* lg breakpoint */
+             .chart-container {
+                 height: 350px;
+             }
+        }
+
 
     </style>
 </head>
@@ -499,11 +515,27 @@
 
             <div class="section hidden" id="reports-section">
                  <h1 class="text-2xl font-bold section-title">Reports</h1>
-                 <div class="card p-6">
-                     <p>Reports section content goes here. Charts and data summaries will be displayed.</p>
-                     <div class="mt-4 h-64 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
-                         <span class="text-gray-500">Chart Area</span>
+                 <div id="reports-content" class="space-y-8">
+                     <div id="reports-no-data" class="hidden card p-6 text-center text-gray-500 dark:text-gray-400">
+                        No inventory data available to generate reports. Add some items first.
                      </div>
+
+                     <div id="reports-charts-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                         <div class="card p-4">
+                             <h2 class="text-lg font-semibold mb-4 text-center">Items by Stock Status</h2>
+                             <div class="chart-container">
+                                 <canvas id="stockStatusChart"></canvas>
+                             </div>
+                         </div>
+
+                         <div class="card p-4">
+                              <h2 class="text-lg font-semibold mb-4 text-center">Items per Category</h2>
+                             <div class="chart-container">
+                                 <canvas id="categoryChart"></canvas>
+                             </div>
+                         </div>
+
+                         </div>
                  </div>
             </div>
 
@@ -619,14 +651,8 @@
 
     <script>
         // --- Service Worker Registration ---
-        if ('serviceWorker' in navigator) {
-          window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-              .then(registration => { console.log('SW registered:', registration.scope); /* ... update checks ... */ })
-              .catch(error => { console.error('SW registration failed:', error); });
-          });
-          navigator.serviceWorker.addEventListener('controllerchange', () => { console.log('Controller changed.'); });
-        } else { console.log('Service Workers not supported.'); }
+        if ('serviceWorker' in navigator) { /* ... SW registration code ... */ }
+        else { console.log('Service Workers not supported.'); }
 
         // --- IndexedDB Setup ---
         const DB_NAME = 'ChainSyncLiteDB';
@@ -678,6 +704,10 @@
         function getAllAuditLogsFromDB() { return new Promise((resolve, reject) => { initDB().then(db => { const tx = db.transaction([AUDIT_LOG_STORE_NAME], 'readonly'); const store = tx.objectStore(AUDIT_LOG_STORE_NAME); const index = store.index('timestamp'); index.getAll(null, 100).onsuccess = e => resolve(e.target.result || []); tx.onerror = e => { console.error(e); reject('Error getting audit logs.'); }; }).catch(reject); }); }
 
 
+        // --- Chart Instances ---
+        let stockStatusChartInstance = null;
+        let categoryChartInstance = null;
+
         // --- Application Logic ---
         document.addEventListener('DOMContentLoaded', async () => {
             // Get references
@@ -689,7 +719,7 @@
             const closeModalButton = document.getElementById('close-modal');
             const cancelItemModalButton = document.getElementById('cancel-item-modal');
             const itemForm = document.getElementById('item-form');
-            const saveSettingsButton = document.getElementById('save-settings-button'); // Get settings button
+            const saveSettingsButton = document.getElementById('save-settings-button');
 
             // Initialize DB
             try {
@@ -702,17 +732,17 @@
             setupThemeToggle(themeToggleButton);
             setupModal(addItemButton, modal, closeModalButton, cancelItemModalButton, itemForm);
             setupInventorySearch();
-            setupSettings(saveSettingsButton); // Setup settings listeners
+            setupSettings(saveSettingsButton);
 
             // Load initial state
             loadActiveSection();
-            loadSettings(); // Load saved settings on startup
+            loadSettings();
 
         }); // End DOMContentLoaded
 
         // --- UI Helper Functions ---
         function setupNavigation(navLinks, sections) { navLinks.forEach(link => { if (!link) return; link.addEventListener('click', (e) => { e.preventDefault(); const href = link.getAttribute('href'); if (!href || href === '#') return; const targetId = href.substring(1); showSection(targetId, sections, navLinks); }); }); }
-        function showSection(targetId, sections, navLinks) { let sectionFound = false; sections.forEach(section => { if (!section) return; const isActive = section.id === targetId + '-section'; section.classList.toggle('active', isActive); section.classList.toggle('hidden', !isActive); if (isActive) { sectionFound = true; if (targetId === 'inventory') loadInventoryData(); else if (targetId === 'reports') loadReportData(); else if (targetId === 'audit') loadAuditLog(); else if (targetId === 'settings') loadSettings(); /* Load settings again if needed? */ } }); navLinks.forEach(link => { if (!link) return; link.classList.toggle('active', link.id === 'nav-' + targetId); }); if (sectionFound) { localStorage.setItem('activeSection', targetId); } else { console.warn(`Section '${targetId}-section' not found.`); showSection('inventory', sections, navLinks); } }
+        function showSection(targetId, sections, navLinks) { let sectionFound = false; sections.forEach(section => { if (!section) return; const isActive = section.id === targetId + '-section'; section.classList.toggle('active', isActive); section.classList.toggle('hidden', !isActive); if (isActive) { sectionFound = true; if (targetId === 'inventory') loadInventoryData(); else if (targetId === 'reports') loadReportData(); else if (targetId === 'audit') loadAuditLog(); else if (targetId === 'settings') loadSettings(); } }); navLinks.forEach(link => { if (!link) return; link.classList.toggle('active', link.id === 'nav-' + targetId); }); if (sectionFound) { localStorage.setItem('activeSection', targetId); } else { console.warn(`Section '${targetId}-section' not found.`); showSection('inventory', sections, navLinks); } }
         function loadActiveSection() { const sections = document.querySelectorAll('.main-content .section'); const navLinks = document.querySelectorAll('.nav-link'); const lastActiveSection = localStorage.getItem('activeSection'); const validSections = ['inventory', 'reports', 'audit', 'settings']; const sectionToShow = (lastActiveSection && validSections.includes(lastActiveSection)) ? lastActiveSection : 'inventory'; sections.forEach(s => s?.classList.add('hidden')); navLinks.forEach(l => l?.classList.remove('active')); showSection(sectionToShow, sections, navLinks); }
         function setupThemeToggle(themeToggleButton) { const applyTheme = (theme) => { const darkIcon = document.getElementById('theme-toggle-dark-icon'); const lightIcon = document.getElementById('theme-toggle-light-icon'); if (theme === 'dark') { document.documentElement.classList.add('dark'); document.body.classList.add('dark'); darkIcon?.classList.remove('hidden'); lightIcon?.classList.add('hidden'); } else { document.documentElement.classList.remove('dark'); document.body.classList.remove('dark'); darkIcon?.classList.add('hidden'); lightIcon?.classList.remove('hidden'); } localStorage.setItem('theme', theme); }; const savedTheme = localStorage.getItem('theme'); const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches; const initialTheme = savedTheme ? savedTheme : (prefersDark ? 'dark' : 'light'); applyTheme(initialTheme); if (themeToggleButton) { themeToggleButton.addEventListener('click', () => { const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'; applyTheme(currentTheme === 'dark' ? 'light' : 'dark'); }); } else { console.warn("Theme toggle button not found"); } }
         function setupModal(addItemButton, modal, closeModalButton, cancelItemModalButton, itemForm) { const modalTitle = document.getElementById('modal-title'); const submitButton = document.getElementById('modal-submit-button'); const skuInput = document.getElementById('item-sku'); const openModalForAdd = () => { itemForm.dataset.mode = 'add'; itemForm.reset(); clearFormErrors(itemForm); modalTitle.textContent = 'Add New Inventory Item'; submitButton.textContent = 'Add Item'; skuInput.readOnly = false; skuInput.classList.remove('form-input:read-only', 'dark:form-input:read-only'); modal.classList.remove('hidden'); modal.classList.add('flex'); skuInput.focus(); }; const closeModal = () => { modal.classList.add('hidden'); modal.classList.remove('flex'); itemForm.reset(); clearFormErrors(itemForm); itemForm.dataset.mode = 'add'; modalTitle.textContent = 'Add New Inventory Item'; submitButton.textContent = 'Add Item'; skuInput.readOnly = false; skuInput.classList.remove('form-input:read-only', 'dark:form-input:read-only'); }; if (addItemButton && modal && closeModalButton && cancelItemModalButton && itemForm && modalTitle && submitButton && skuInput) { addItemButton.addEventListener('click', openModalForAdd); closeModalButton.addEventListener('click', closeModal); cancelItemModalButton.addEventListener('click', closeModal); modal.addEventListener('click', (event) => { if (event.target === modal) { closeModal(); } }); itemForm.addEventListener('submit', handleItemFormSubmit); } else { console.warn("Modal elements not all found."); } }
@@ -760,82 +790,99 @@
         function renderAuditLogRow(log, tableBody) { const row = tableBody.insertRow(); row.className = 'border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors duration-150'; const timestamp = new Date(log.timestamp); const formattedTimestamp = timestamp.toLocaleString(); row.innerHTML = `<td class="py-3 px-4 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">${formattedTimestamp}</td><td class="py-3 px-4 text-sm font-medium">${log.action.replace('_', ' ')}</td> <td class="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">${log.details}</td>`; }
 
         // --- Settings Functions ---
-        function setupSettings(saveButton) {
-            if (saveButton) {
-                saveButton.addEventListener('click', saveSettings);
-            } else {
-                console.warn("Save settings button not found.");
-            }
-            // Add listener for the toggle if needed for immediate effect elsewhere
-            // document.getElementById('setting-low-stock-alerts')?.addEventListener('change', handleLowStockToggle);
-        }
-
-        function loadSettings() {
-            console.log("Loading settings from localStorage...");
-            const companyNameInput = document.getElementById('setting-company-name');
-            const currencySelect = document.getElementById('setting-currency');
-            const lowStockToggle = document.getElementById('setting-low-stock-alerts');
-
-            const savedCompanyName = localStorage.getItem('setting_companyName');
-            const savedCurrency = localStorage.getItem('setting_currency');
-            const savedLowStockAlert = localStorage.getItem('setting_lowStockAlerts'); // Stored as string 'true'/'false'
-
-            if (companyNameInput) {
-                companyNameInput.value = savedCompanyName || 'My Small Business'; // Default value
-            }
-            if (currencySelect) {
-                currencySelect.value = savedCurrency || '$'; // Default value
-            }
-            if (lowStockToggle) {
-                lowStockToggle.checked = savedLowStockAlert === 'true'; // Convert string to boolean
-            }
-        }
-
+        function setupSettings(saveButton) { if (saveButton) { saveButton.addEventListener('click', saveSettings); } else { console.warn("Save settings button not found."); } }
+        function loadSettings() { console.log("Loading settings..."); const companyNameInput = document.getElementById('setting-company-name'); const currencySelect = document.getElementById('setting-currency'); const lowStockToggle = document.getElementById('setting-low-stock-alerts'); const savedCompanyName = localStorage.getItem('setting_companyName'); const savedCurrency = localStorage.getItem('setting_currency'); const savedLowStockAlert = localStorage.getItem('setting_lowStockAlerts'); if (companyNameInput) { companyNameInput.value = savedCompanyName || 'My Small Business'; } if (currencySelect) { currencySelect.value = savedCurrency || '$'; } if (lowStockToggle) { lowStockToggle.checked = savedLowStockAlert === 'true'; } }
         function saveSettings() {
-            console.log("Saving settings to localStorage...");
+            console.log("Saving settings...");
             const companyNameInput = document.getElementById('setting-company-name');
             const currencySelect = document.getElementById('setting-currency');
             const lowStockToggle = document.getElementById('setting-low-stock-alerts');
             const saveButton = document.getElementById('save-settings-button');
-
-            saveButton.disabled = true; // Disable button during save
+            saveButton.disabled = true;
             saveButton.textContent = 'Saving...';
-
             try {
                 const companyName = companyNameInput.value.trim();
                 const currency = currencySelect.value;
-                const lowStockAlerts = lowStockToggle.checked; // Boolean
-
+                const lowStockAlerts = lowStockToggle.checked;
                 localStorage.setItem('setting_companyName', companyName);
                 localStorage.setItem('setting_currency', currency);
-                localStorage.setItem('setting_lowStockAlerts', lowStockAlerts); // Stored as string 'true'/'false'
-
+                localStorage.setItem('setting_lowStockAlerts', lowStockAlerts);
                 console.log("Settings saved:", { companyName, currency, lowStockAlerts });
-                showNotification('Settings saved successfully.', 'success');
-
-                // Optional: Update UI elements that depend on settings immediately
-                updateSummaryCards( /* Need to pass current items if called here */ ); // Reload summary cards to reflect new currency
-
+                showNotification('Settings saved.', 'success');
+                // Update summary cards immediately if needed (requires fetching items)
+                // Since summary cards load with inventory, maybe just let it update on next inventory view?
+                // Or fetch items here:
+                // getAllItemsFromDB().then(items => updateSummaryCards(items)).catch(err => console.error("Error updating summary after settings save:", err));
             } catch (error) {
                 console.error("Error saving settings:", error);
                 showNotification('Failed to save settings.', 'error');
             } finally {
-                 saveButton.disabled = false; // Re-enable button
+                 saveButton.disabled = false;
                  saveButton.textContent = 'Save Settings';
             }
         }
 
-        // Placeholder function if low stock toggle needs immediate effect
-        // function handleLowStockToggle(event) {
-        //     const isEnabled = event.target.checked;
-        //     console.log("Low stock alert visualization toggled:", isEnabled);
-        //     // Add logic here if the UI needs to react instantly,
-        //     // otherwise, saving handles persistence.
-        // }
+        // --- Reports / Charts Functions ---
+        async function loadReportData() {
+            console.log("Load Report Data");
+            const noDataMessage = document.getElementById('reports-no-data');
+            const chartsGrid = document.getElementById('reports-charts-grid');
+            const stockStatusCtx = document.getElementById('stockStatusChart')?.getContext('2d');
+            const categoryCtx = document.getElementById('categoryChart')?.getContext('2d');
 
+            if (!stockStatusCtx || !categoryCtx || !noDataMessage || !chartsGrid) {
+                console.error("Report canvas elements or containers not found!");
+                return;
+            }
 
-        // --- Placeholder for Reports ---
-        function loadReportData() { console.log("Load Report Data - Placeholder"); }
+            try {
+                const items = await getAllItemsFromDB();
+
+                if (items.length === 0) {
+                    noDataMessage.classList.remove('hidden'); chartsGrid.classList.add('hidden');
+                    if (stockStatusChartInstance) stockStatusChartInstance.destroy();
+                    if (categoryChartInstance) categoryChartInstance.destroy();
+                    stockStatusChartInstance = null; categoryChartInstance = null; return;
+                } else {
+                    noDataMessage.classList.add('hidden'); chartsGrid.classList.remove('hidden');
+                }
+
+                // Process Data
+                const lowStockThreshold = 10; let inStockCount = 0; let lowStockCount = 0; let outOfStockCount = 0;
+                const categoryCounts = {};
+                items.forEach(item => {
+                    if (item.quantity <= 0) { outOfStockCount++; } else if (item.quantity <= lowStockThreshold) { lowStockCount++; } else { inStockCount++; }
+                    const category = item.category?.trim() || 'Uncategorized'; categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+                });
+
+                // Destroy Old Charts
+                if (stockStatusChartInstance) { stockStatusChartInstance.destroy(); console.log("Destroyed previous stock status chart."); }
+                if (categoryChartInstance) { categoryChartInstance.destroy(); console.log("Destroyed previous category chart."); }
+
+                // Create Stock Status Chart
+                console.log("Creating stock status chart...");
+                stockStatusChartInstance = new Chart(stockStatusCtx, {
+                    type: 'doughnut',
+                    data: { labels: ['In Stock', 'Low Stock', 'Out of Stock'], datasets: [{ label: 'Stock Status', data: [inStockCount, lowStockCount, outOfStockCount], backgroundColor: ['rgba(16, 185, 129, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(239, 68, 68, 0.7)'], borderColor: ['rgba(16, 185, 129, 1)', 'rgba(245, 158, 11, 1)', 'rgba(239, 68, 68, 1)'], borderWidth: 1 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', }, tooltip: { callbacks: { label: function(context) { let label = context.label || ''; if (label) { label += ': '; } if (context.parsed !== null) { label += context.parsed; } return label; } } } } }
+                });
+
+                // Create Category Chart
+                console.log("Creating category chart...");
+                const categoryLabels = Object.keys(categoryCounts); const categoryData = Object.values(categoryCounts);
+                categoryChartInstance = new Chart(categoryCtx, {
+                    type: 'bar',
+                    data: { labels: categoryLabels, datasets: [{ label: 'Items per Category', data: categoryData, backgroundColor: 'rgba(13, 148, 136, 0.6)', borderColor: 'rgba(13, 148, 136, 1)', borderWidth: 1 }] },
+                    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+                });
+
+            } catch (error) {
+                 console.error("Error loading or processing report data:", error); showNotification('Error generating reports.', 'error');
+                 noDataMessage.classList.remove('hidden'); chartsGrid.classList.add('hidden');
+                 if (stockStatusChartInstance) stockStatusChartInstance.destroy(); if (categoryChartInstance) categoryChartInstance.destroy();
+                 stockStatusChartInstance = null; categoryChartInstance = null;
+            }
+        }
 
     </script>
 
